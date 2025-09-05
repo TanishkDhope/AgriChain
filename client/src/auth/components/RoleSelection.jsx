@@ -2,7 +2,7 @@ import { ArrowLeft, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function RoleSelection() {
+export default function RoleSelection({ onBack }) {
   const [selectedRole, setSelectedRole] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ export default function RoleSelection() {
   const roles = [
     {
       id: "farmer",
-      title: "Farmer",
+      title: "Farmer", 
       subtitle: "Grow & Sell",
       icon: "🌾",
       description:
@@ -77,7 +77,7 @@ export default function RoleSelection() {
     setSelectedRole(roleId);
     setIsNavigating(true);
 
-    // Simulate loading, then navigate
+    // Simulate loading, then navigate to the role-specific dashboard
     setTimeout(() => {
       navigate(`/dashboard/${roleId}`);
     }, 1200);
@@ -88,9 +88,9 @@ export default function RoleSelection() {
       <div className="w-full max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="mb-12">
-          {/* Back Button */}
+          {/* Back Button - Updated to use onBack prop */}
           <button
-            onClick={() => navigate("/login")}
+            onClick={onBack}
             disabled={isNavigating}
             className="inline-flex items-center gap-2 text-green-600 font-medium mb-8 px-4 py-2 rounded-lg hover:bg-green-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
           >
