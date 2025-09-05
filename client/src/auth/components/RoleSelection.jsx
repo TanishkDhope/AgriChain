@@ -1,9 +1,11 @@
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function RoleSelection({ onBack, onRoleSelect }) {
+export default function RoleSelection() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const navigate = useNavigate();
 
   const roles = [
     {
@@ -11,67 +13,73 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
       title: "Farmer",
       subtitle: "Grow & Sell",
       icon: "🌾",
-      description: "Manage your crops, set competitive prices, and track sales directly to retailers and consumers.",
+      description:
+        "Manage your crops, set competitive prices, and track sales directly to retailers and consumers.",
       bgGradient: "from-green-50 to-emerald-50",
       borderColor: "border-green-200",
       textColor: "text-green-700",
-      buttonGradient: "from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700",
+      buttonGradient:
+        "from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700",
       iconBg: "bg-green-100",
       features: [
         { icon: "🌱", text: "Crop Management" },
         { icon: "💰", text: "Price Setting" },
         { icon: "📊", text: "Sales Analytics" },
-        { icon: "🤝", text: "Direct Sales" }
+        { icon: "🤝", text: "Direct Sales" },
       ],
-      stats: { users: "50K+", growth: "25%", rating: "4.8" }
+      stats: { users: "50K+", growth: "25%", rating: "4.8" },
     },
     {
       id: "retailer",
       title: "Retailer",
       subtitle: "Connect & Trade",
       icon: "🏪",
-      description: "Browse quality produce, negotiate contracts, and manage your supply chain efficiently.",
+      description:
+        "Browse quality produce, negotiate contracts, and manage your supply chain efficiently.",
       bgGradient: "from-amber-50 to-yellow-50",
       borderColor: "border-amber-200",
       textColor: "text-amber-700",
-      buttonGradient: "from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700",
+      buttonGradient:
+        "from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700",
       iconBg: "bg-amber-100",
       features: [
         { icon: "🛍️", text: "Browse Products" },
         { icon: "📋", text: "Contract Management" },
         { icon: "🚚", text: "Delivery Tracking" },
-        { icon: "📦", text: "Inventory Control" }
+        { icon: "📦", text: "Inventory Control" },
       ],
-      stats: { users: "25K+", growth: "35%", rating: "4.7" }
+      stats: { users: "25K+", growth: "35%", rating: "4.7" },
     },
     {
       id: "consumer",
       title: "Consumer",
       subtitle: "Buy & Trace",
       icon: "🛒",
-      description: "Scan QR codes to verify freshness and trace your food's complete farm-to-table journey.",
+      description:
+        "Scan QR codes to verify freshness and trace your food's complete farm-to-table journey.",
       bgGradient: "from-blue-50 to-cyan-50",
       borderColor: "border-blue-200",
       textColor: "text-blue-700",
-      buttonGradient: "from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700",
+      buttonGradient:
+        "from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700",
       iconBg: "bg-blue-100",
       features: [
         { icon: "📱", text: "QR Code Scanning" },
         { icon: "🔍", text: "Product Traceability" },
         { icon: "🥬", text: "Fresh Produce" },
-        { icon: "🔒", text: "Secure Shopping" }
+        { icon: "🔒", text: "Secure Shopping" },
       ],
-      stats: { users: "100K+", growth: "45%", rating: "4.9" }
-    }
+      stats: { users: "100K+", growth: "45%", rating: "4.9" },
+    },
   ];
 
-  const handleRoleSelect = async (roleId) => {
+  const handleRoleSelect = (roleId) => {
     setSelectedRole(roleId);
     setIsNavigating(true);
 
-    // Simulate navigation delay
+    // Simulate loading, then navigate
     setTimeout(() => {
-      onRoleSelect(roleId);
+      navigate(`/dashboard/${roleId}`);
     }, 1200);
   };
 
@@ -82,11 +90,14 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
         <div className="mb-12">
           {/* Back Button */}
           <button
-            onClick={onBack}
+            onClick={() => navigate("/login")}
             disabled={isNavigating}
             className="inline-flex items-center gap-2 text-green-600 font-medium mb-8 px-4 py-2 rounded-lg hover:bg-green-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
           >
-            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" /> 
+            <ArrowLeft
+              size={20}
+              className="group-hover:-translate-x-1 transition-transform"
+            />
             Back to Login
           </button>
 
@@ -99,8 +110,9 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
               Choose Your Role
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Join thousands of users transforming agriculture through technology. 
-              Select your role to unlock personalized features and start your journey.
+              Join thousands of users transforming agriculture through
+              technology. Select your role to unlock personalized features and
+              start your journey.
             </p>
           </div>
         </div>
@@ -111,15 +123,19 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
             <div
               key={role.id}
               className={`relative group bg-gradient-to-br ${role.bgGradient} rounded-3xl p-8 border-2 ${role.borderColor} shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 ${
-                selectedRole === role.id ? 'ring-4 ring-green-300 scale-105' : 'hover:scale-105'
+                selectedRole === role.id
+                  ? "ring-4 ring-green-300 scale-105"
+                  : "hover:scale-105"
               }`}
               style={{
-                animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
+                animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`,
               }}
             >
               {/* Role Header */}
               <div className="text-center mb-6">
-                <div className={`w-24 h-24 rounded-full ${role.iconBg} flex items-center justify-center text-5xl mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                <div
+                  className={`w-24 h-24 rounded-full ${role.iconBg} flex items-center justify-center text-5xl mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}
+                >
                   {role.icon}
                 </div>
                 <h2 className={`text-3xl font-bold ${role.textColor} mb-1`}>
@@ -136,7 +152,10 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
               {/* Features Grid */}
               <div className="grid grid-cols-2 gap-3 mb-6">
                 {role.features.map((feature, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 bg-white bg-opacity-50 rounded-lg p-2">
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 text-sm text-gray-700 bg-white bg-opacity-50 rounded-lg p-2"
+                  >
                     <span className="text-lg">{feature.icon}</span>
                     <span className="font-medium">{feature.text}</span>
                   </div>
@@ -146,15 +165,21 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
               {/* Stats */}
               <div className="flex justify-between text-center mb-6 bg-white bg-opacity-30 rounded-xl p-3">
                 <div>
-                  <div className="font-bold text-gray-800">{role.stats.users}</div>
+                  <div className="font-bold text-gray-800">
+                    {role.stats.users}
+                  </div>
                   <div className="text-xs text-gray-600">Users</div>
                 </div>
                 <div>
-                  <div className="font-bold text-green-600">+{role.stats.growth}</div>
+                  <div className="font-bold text-green-600">
+                    +{role.stats.growth}
+                  </div>
                   <div className="text-xs text-gray-600">Growth</div>
                 </div>
                 <div>
-                  <div className="font-bold text-yellow-600">★ {role.stats.rating}</div>
+                  <div className="font-bold text-yellow-600">
+                    ★ {role.stats.rating}
+                  </div>
                   <div className="text-xs text-gray-600">Rating</div>
                 </div>
               </div>
@@ -173,7 +198,10 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
                 ) : (
                   <span className="flex items-center justify-center gap-2">
                     Continue as {role.title}
-                    <CheckCircle size={20} className="group-hover:scale-110 transition-transform" />
+                    <CheckCircle
+                      size={20}
+                      className="group-hover:scale-110 transition-transform"
+                    />
                   </span>
                 )}
               </button>
@@ -182,14 +210,23 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
               {isNavigating && selectedRole === role.id && (
                 <div className="absolute inset-0 bg-white bg-opacity-90 rounded-3xl flex flex-col items-center justify-center backdrop-blur-sm">
                   <div className="w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Preparing Your Dashboard</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    Preparing Your Dashboard
+                  </h3>
                   <p className="text-gray-600 text-center px-4">
-                    Setting up personalized features for your {role.title.toLowerCase()} experience...
+                    Setting up personalized features for your{" "}
+                    {role.title.toLowerCase()} experience...
                   </p>
                   <div className="mt-4 flex gap-1">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div
+                      className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
                 </div>
               )}
