@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import Navbar from "../components/navbar"
 import HomeHero from "../components/sections/home-hero"
 import ProduceSection from "../components/sections/produce-section"
@@ -10,10 +11,14 @@ import { initialProduce } from "../lib/data"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
-export default function Page() {
+export default function FarmerPage({ onLogout }) {
   const [produce, setProduce] = useState(initialProduce)
   const [reports, setReports] = useState([])
   const sectionsRef = useRef({})
+  const navigate = useNavigate()
+
+  // Get user data from localStorage
+  const userData = JSON.parse(localStorage.getItem('user') || '{}')
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
@@ -35,6 +40,14 @@ export default function Page() {
     })
   }, [])
 
+  // Handle logout functionality
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout()
+    }
+    navigate("/auth")
+  }
+
   // Derived pricing data for market insights (mock "real-time")
   const marketData = useMemo(() => {
     const now = Date.now()
@@ -48,6 +61,8 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Navbar
+        userData={userData}
+        onLogout={handleLogout}
         onNavigate={(id) => {
           const el = sectionsRef.current[id]
           if (el) {
@@ -58,7 +73,7 @@ export default function Page() {
       />
 
       <section id="home" ref={(el) => (sectionsRef.current["home"] = el)} data-section className="relative">
-        <HomeHero />
+        <HomeHero userData={userData} />
       </section>
 
       <section
@@ -81,7 +96,11 @@ export default function Page() {
         data-section
         className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
       >
-        <ReportsSection produce={produce} reports={reports} onAddReport={(r) => setReports((prev) => [r, ...prev])} />
+        <ReportsSection 
+          produce={produce} 
+          reports={reports} 
+          onAddReport={(r) => setReports((prev) => [r, ...prev])} 
+        />
       </section>
 
       <section
@@ -108,7 +127,11 @@ export default function Page() {
         data-section
         className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
       >
-        <AccountSection reports={reports} />
+        <AccountSection 
+          reports={reports} 
+          userData={userData}
+          onLogout={handleLogout}
+        />
       </section>
     </main>
   )

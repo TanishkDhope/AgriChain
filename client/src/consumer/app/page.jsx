@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import {
   Card,
@@ -20,12 +21,16 @@ import {
   Camera,
   Upload,
   X,
+  LogOut,
+  User,
 } from "lucide-react";
 import { mockTransactions } from "../lib/data";
 import "../styles/product.css";
 
-export default function ConsumerHomePage() {
+export default function ConsumerHomePage({ onLogout }) {
   const [showScanModal, setShowScanModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
 
   const handleScanQR = () => {
     setShowScanModal(true);
@@ -50,6 +55,16 @@ export default function ConsumerHomePage() {
   const handleReportIssue = () => {
     console.log("Opening report issue form...");
   };
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
+    navigate("/auth");
+  };
+
+  // Get user data from localStorage
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
   return (
     <div
@@ -86,7 +101,9 @@ export default function ConsumerHomePage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            
+            {/* User Menu */}
+            <div className="flex items-center gap-2 relative">
               <Button
                 variant="ghost"
                 size="icon"
@@ -94,6 +111,40 @@ export default function ConsumerHomePage() {
               >
                 <Globe className="h-5 w-5" />
               </Button>
+              
+              {/* User Avatar/Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/20 transition-colors"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="hidden sm:block text-sm font-medium">
+                    {userData.fullName || userData.phone || 'Consumer'}
+                  </span>
+                </button>
+
+                {/* Dropdown Menu */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <p className="text-sm font-medium text-gray-900">
+                        {userData.fullName || 'Consumer'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {userData.email || userData.phone}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -358,6 +409,14 @@ export default function ConsumerHomePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Click outside to close user menu */}
+      {showUserMenu && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowUserMenu(false)}
+        />
       )}
 
       {/* Footer */}
