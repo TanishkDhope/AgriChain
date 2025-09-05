@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 
-export default function Actions({ showQR, setShowQR, darkMode }) {
+export default function Actions({ showQR, setShowQR }) {
   const [copied, setCopied] = useState(false)
 
   const handleShareLink = async () => {
@@ -21,19 +21,9 @@ export default function Actions({ showQR, setShowQR, darkMode }) {
   }
 
   return (
-    <div className={`space-y-8 p-6 rounded-3xl backdrop-blur-lg shadow-2xl relative overflow-hidden ${
-      darkMode 
-        ? 'bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 border border-slate-600/50' 
-        : 'bg-gradient-to-br from-white/90 via-slate-50/60 to-white/90 border border-slate-200/50'
-    }`}>
+    <div className="space-y-8 p-6 rounded-3xl backdrop-blur-lg shadow-2xl relative overflow-hidden bg-gradient-to-br from-white/90 via-slate-50/60 to-white/90 border border-slate-200/50">
       {/* Background decoration */}
-      <div className={`absolute inset-0 ${
-        darkMode 
-          ? 'bg-gradient-to-r from-slate-800/40 via-transparent to-slate-700/40' 
-          : 'bg-gradient-to-r from-slate-100/50 via-transparent to-slate-200/50'
-      }`}></div>
-      <div className="absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-bl from-blue-300/20 to-transparent rounded-full"></div>
-      
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-100/50 via-transparent to-slate-200/50"></div>
       <div className="relative z-10">
         {/* Primary Action Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -53,17 +43,13 @@ export default function Actions({ showQR, setShowQR, darkMode }) {
             className={`group relative overflow-hidden flex items-center justify-center px-6 py-4 text-sm font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-lg ${
               copied
                 ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white border border-green-500'
-                : darkMode 
-                  ? 'bg-gradient-to-r from-slate-800/90 to-slate-700/90 hover:from-slate-700/90 hover:to-slate-600/90 text-slate-200 border border-slate-600/50' 
-                  : 'bg-gradient-to-r from-white/90 to-slate-100/90 hover:from-slate-100/90 hover:to-slate-200/90 text-slate-700 border border-slate-300/50'
+                : 'bg-gradient-to-r from-white/90 to-slate-100/90 hover:from-slate-100/90 hover:to-slate-200/90 text-slate-700 border border-slate-300/50'
             }`}
           >
             <div className={`absolute inset-0 bg-gradient-to-r ${
               copied 
                 ? 'from-green-400/20 to-emerald-400/20'
-                : darkMode
-                  ? 'from-slate-600/30 to-slate-500/30'
-                  : 'from-slate-200/40 to-slate-300/40'
+                : 'from-slate-200/40 to-slate-300/40'
             } translate-y-full group-hover:translate-y-0 transition-transform duration-300`}></div>
             
             <svg className="w-5 h-5 mr-3 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,14 +67,8 @@ export default function Actions({ showQR, setShowQR, darkMode }) {
 
         {/* Secondary Action Buttons - Added more spacing */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-          <button className={`group relative overflow-hidden flex items-center justify-center px-6 py-4 text-sm font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-lg ${
-            darkMode 
-              ? 'bg-gradient-to-r from-slate-800/90 to-slate-700/90 hover:from-slate-700/90 hover:to-slate-600/90 text-slate-200 border border-slate-600/50' 
-              : 'bg-gradient-to-r from-white/90 to-slate-100/90 hover:from-slate-100/90 hover:to-slate-200/90 text-slate-700 border border-slate-300/50'
-          }`}>
-            <div className={`absolute inset-0 bg-gradient-to-r ${
-              darkMode ? 'from-slate-600/30 to-slate-500/30' : 'from-slate-200/40 to-slate-300/40'
-            } translate-y-full group-hover:translate-y-0 transition-transform duration-300`}></div>
+          <button className="group relative overflow-hidden flex items-center justify-center px-6 py-4 text-sm font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-lg bg-gradient-to-r from-white/90 to-slate-100/90 hover:from-slate-100/90 hover:to-slate-200/90 text-slate-700 border border-slate-300/50">
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-200/40 to-slate-300/40 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             <svg className="w-5 h-5 mr-3 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -106,29 +86,21 @@ export default function Actions({ showQR, setShowQR, darkMode }) {
 
         {/* QR Code Display */}
         {showQR && (
-          <div className={`mt-8 p-8 border-2 border-dashed rounded-3xl text-center shadow-2xl transition-all duration-500 transform backdrop-blur-lg relative overflow-hidden ${
+          <div className={`mt-8 p-8 border-2 border-dashed rounded-3xl text-center shadow-2xl transition-all duration-500 transform backdrop-blur-lg relative overflow-hidden bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-300 ${
             showQR ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-          } ${
-            darkMode 
-              ? 'bg-gradient-to-br from-slate-700/80 to-slate-800/80 border-slate-600' 
-              : 'bg-gradient-to-br from-white/80 to-slate-50/80 border-slate-300'
           }`}>
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-emerald-500/10"></div>
             
-            <div className={`w-48 h-48 mx-auto mb-6 rounded-3xl flex items-center justify-center border-2 shadow-xl relative overflow-hidden ${
-              darkMode 
-                ? 'bg-gradient-to-br from-slate-600/80 to-slate-700/80 border-slate-500' 
-                : 'bg-gradient-to-br from-slate-50/80 to-white/80 border-slate-200'
-            }`}>
+            <div className="w-48 h-48 mx-auto mb-6 rounded-3xl flex items-center justify-center border-2 shadow-xl relative overflow-hidden bg-gradient-to-br from-slate-50/80 to-white/80 border-slate-200">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-blue-500/10"></div>
-              <svg className={`w-24 h-24 relative z-10 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-24 h-24 relative z-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
               </svg>
             </div>
-            <h4 className={`text-xl font-bold mb-3 relative z-10 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>
+            <h4 className="text-xl font-bold mb-3 relative z-10 text-slate-900">
               Product Verification QR Code
             </h4>
-            <p className={`text-lg relative z-10 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            <p className="text-lg relative z-10 text-slate-600">
               Scan to verify authenticity and trace supply chain
             </p>
           </div>

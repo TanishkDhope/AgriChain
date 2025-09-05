@@ -1,20 +1,12 @@
 import React from "react"
 
-export default function Reviews({ data, darkMode }) {
+export default function Reviews({ data }) {
   const averageRating = 4.7
   const totalReviews = data.length
 
   return (
-    <div className={`rounded-3xl shadow-2xl transition-all duration-300 overflow-hidden backdrop-blur-lg ${
-      darkMode 
-        ? 'bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 border border-slate-700/50' 
-        : 'bg-gradient-to-br from-white/90 via-yellow-50/60 to-white/90 border border-yellow-200/50'
-    }`}>
-      <div className={`px-8 py-8 border-b relative overflow-hidden ${
-        darkMode 
-          ? 'bg-gradient-to-r from-yellow-900/80 via-amber-800/60 to-yellow-900/80 border-slate-700/50' 
-          : 'bg-gradient-to-r from-yellow-100/90 via-amber-100/70 to-yellow-200/90 border-yellow-200/50'
-      }`}>
+    <div className="rounded-3xl shadow-2xl transition-all duration-300 overflow-hidden backdrop-blur-lg bg-gradient-to-br from-white/90 via-yellow-50/60 to-white/90 border border-yellow-200/50">
+      <div className="px-8 py-8 border-b relative overflow-hidden bg-gradient-to-r from-yellow-100/90 via-amber-100/70 to-yellow-200/90 border-yellow-200/50">
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-transparent to-amber-500/20"></div>
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-400/30 to-transparent rounded-3xl"></div>
         <div className="flex items-center space-x-4 relative z-10">
@@ -24,7 +16,7 @@ export default function Reviews({ data, darkMode }) {
             </svg>
           </div>
           <div>
-            <h2 className={`text-3xl font-bold ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+            <h2 className="text-3xl font-bold text-yellow-800">
               Customer Reviews
             </h2>
           </div>
@@ -32,18 +24,10 @@ export default function Reviews({ data, darkMode }) {
       </div>
       
       <div className="p-8 relative">
-        <div className={`absolute inset-0 ${
-          darkMode 
-            ? 'bg-gradient-to-br from-slate-800/40 via-transparent to-yellow-900/20' 
-            : 'bg-gradient-to-br from-yellow-50/40 via-transparent to-white/60'
-        }`}></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/40 via-transparent to-white/60"></div>
         
         {/* Rating Summary */}
-        <div className={`flex items-center justify-between mb-8 p-6 rounded-3xl backdrop-blur-sm shadow-xl relative z-10 overflow-hidden ${
-          darkMode 
-            ? 'bg-gradient-to-r from-slate-700/90 to-slate-600/90 border border-slate-600/50' 
-            : 'bg-gradient-to-r from-yellow-50/90 to-amber-50/90 border border-yellow-200/50'
-        }`}>
+        <div className="flex items-center justify-between mb-8 p-6 rounded-3xl backdrop-blur-sm shadow-xl relative z-10 overflow-hidden bg-gradient-to-r from-yellow-50/90 to-amber-50/90 border border-yellow-200/50">
           <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-transparent to-amber-500/10"></div>
           
           <div className="flex items-center space-x-4 relative z-10">
@@ -66,19 +50,19 @@ export default function Reviews({ data, darkMode }) {
               ))}
             </div>
             <div>
-              <span className={`text-3xl font-bold ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>
+              <span className="text-3xl font-bold text-slate-900">
                 {averageRating}
               </span>
-              <span className={`text-xl ml-2 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              <span className="text-xl ml-2 text-slate-600">
                 out of 5
               </span>
             </div>
           </div>
           <div className="text-right relative z-10">
-            <div className={`text-2xl font-bold ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>
+            <div className="text-2xl font-bold text-slate-900">
               {totalReviews}
             </div>
-            <div className={`${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+            <div className="text-slate-600">
               reviews
             </div>
           </div>
@@ -87,17 +71,9 @@ export default function Reviews({ data, darkMode }) {
         {/* Reviews Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
           {data.map((review) => (
-            <div key={review.id} className={`rounded-3xl p-8 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 backdrop-blur-lg relative overflow-hidden ${
-              darkMode 
-                ? 'bg-gradient-to-br from-slate-700/90 via-slate-600/80 to-slate-700/90 border border-slate-600/50' 
-                : 'bg-gradient-to-br from-white/90 via-slate-50/60 to-white/90 border border-slate-200/50'
-            }`}>
+            <div key={review.id} className="rounded-3xl p-8 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 backdrop-blur-lg relative overflow-hidden bg-gradient-to-br from-white/90 via-slate-50/60 to-white/90 border border-slate-200/50">
               {/* Background decoration */}
-              <div className={`absolute inset-0 ${
-                darkMode 
-                  ? 'bg-gradient-to-br from-blue-900/20 via-transparent to-slate-800/20' 
-                  : 'bg-gradient-to-br from-blue-50/30 via-transparent to-slate-100/30'
-              }`}></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-slate-100/30"></div>
               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-blue-300/20 to-transparent rounded-3xl"></div>
               
               <div className="flex items-center space-x-4 mb-6 relative z-10">
@@ -105,7 +81,7 @@ export default function Reviews({ data, darkMode }) {
                   {review.name.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
-                  <h4 className={`font-bold text-lg ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>
+                  <h4 className="font-bold text-lg text-slate-900">
                     {review.name}
                   </h4>
                   <div className="flex items-center space-x-1 mt-1">
@@ -124,13 +100,13 @@ export default function Reviews({ data, darkMode }) {
                       </svg>
                     ))}
                   </div>
-                  <span className={`text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <span className="text-sm text-slate-500">
                     {review.date}
                   </span>
                 </div>
               </div>
               
-              <p className={`leading-relaxed text-lg relative z-10 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+              <p className="leading-relaxed text-lg relative z-10 text-slate-700">
                 {review.review}
               </p>
             </div>
