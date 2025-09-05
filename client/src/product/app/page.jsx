@@ -35,7 +35,7 @@ export default function ProductPage() {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  AgriTrace
+                  AgriChain
                 </h1>
                 <p
                   className="text-xs sm:text-sm hidden sm:block"
@@ -116,7 +116,7 @@ export default function ProductPage() {
             </div>
             <div className="mt-6 pt-6 border-t border-slate-800">
               <p className="text-xs sm:text-sm text-slate-400">
-                © 2025 AgriTrace. All rights reserved. Building trust through
+                © 2025 AgriChain. All rights reserved. Building trust through
                 transparency.
               </p>
             </div>

@@ -46,7 +46,7 @@ export default function AuthPage({ onAuthSuccess }) {
           <div className="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
             🌱
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">AgriTrack</h1>
+          <h1 className="text-2xl font-bold text-gray-800">AgriChain</h1>
           <p className="text-sm text-gray-600 mt-1">Connecting Agriculture</p>
         </div>
 
