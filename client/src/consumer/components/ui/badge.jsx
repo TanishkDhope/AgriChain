@@ -1,16 +1,23 @@
-import React from 'react';
+import React from "react";
 
-export const Badge = ({ children, variant = 'default', className = '', ...props }) => {
-  const baseClasses = 'inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2';
-  
+export const Badge = ({ 
+  children, 
+  variant = "default", 
+  className = "",
+  ...props 
+}) => {
   const variants = {
-    default: 'border-transparent bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-200/50',
-    secondary: 'border-transparent bg-gradient-to-r from-slate-100 to-slate-200 text-slate-800 shadow-md hover:shadow-lg'
+    default: "bg-green-100 text-green-800",
+    secondary: "bg-gray-100 text-gray-800",
+    destructive: "bg-red-100 text-red-800"
   };
-  
+
   return (
-    <div className={`${baseClasses} ${variants[variant]} ${className}`} {...props}>
+    <span 
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}
+      {...props}
+    >
       {children}
-    </div>
+    </span>
   );
 };
