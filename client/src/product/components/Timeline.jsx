@@ -1,135 +1,287 @@
-import React from "react"
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { timelineData } from "../lib/data";
 
-const stepIcons = [
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>,
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>,
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-  </svg>,
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>,
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-]
+const InfoRow = ({ label, value }) => (
+  <div className="py-3 px-4 text-sm flex items-center justify-between bg-gradient-to-r from-sky-50/80 to-blue-50/80 rounded-xl mb-3 hover:from-sky-100/90 hover:to-blue-100/90 border border-sky-200/50 transition-all duration-300 shadow-sm">
+    <span className="font-semibold text-sky-800">{label}:</span>
+    <span className="text-slate-900 font-mono text-xs bg-white px-3 py-1.5 rounded-lg shadow-md border border-sky-200/50 font-medium">
+      {value}
+    </span>
+  </div>
+);
 
-export default function Timeline({ data, darkMode }) {
-  return (
-    <div className={`rounded-3xl shadow-2xl transition-all duration-300 overflow-hidden backdrop-blur-lg ${
-      darkMode 
-        ? 'bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 border border-slate-700/50' 
-        : 'bg-gradient-to-br from-white/90 via-blue-50/60 to-white/90 border border-blue-200/50'
-    }`}>
-      {/* Header */}
-      <div className={`px-8 py-8 border-b relative overflow-hidden ${
-        darkMode 
-          ? 'bg-gradient-to-r from-blue-900/80 via-blue-800/60 to-indigo-900/80 border-slate-700/50' 
-          : 'bg-gradient-to-r from-blue-100/90 via-indigo-100/70 to-blue-200/90 border-blue-200/50'
-      }`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-transparent to-indigo-500/20"></div>
-        <div className="flex items-center space-x-4 relative z-10">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-xl">
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className={`text-3xl font-bold ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
-              Supply Chain Journey
-            </h2>
-            <p className={`text-lg mt-1 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
-              Track every step from farm to table
-            </p>
-          </div>
-        </div>
+const StepIndicator = ({ stepNumber, isActive, isCompleted, icon, title }) => (
+  <div className="flex flex-col items-center">
+    <div
+      className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center text-lg md:text-2xl font-bold border-4 transition-all duration-300 ${
+        isActive
+          ? "bg-gradient-to-r from-sky-400 to-blue-500 border-sky-300 text-white shadow-lg shadow-sky-300/50 transform scale-110"
+          : isCompleted
+          ? "bg-gradient-to-r from-sky-300 to-blue-400 border-sky-200 text-white shadow-lg shadow-sky-300/50"
+          : "bg-gradient-to-r from-slate-100 to-gray-100 border-slate-300 text-slate-600"
+      }`}
+    >
+      {icon}
+    </div>
+    <div className="mt-2 text-center">
+      <div className="text-xs md:text-sm font-bold text-slate-800">
+        Step {stepNumber}
       </div>
-      
-      {/* Timeline Content */}
-      <div className="p-10 relative">
-        <div className={`absolute inset-0 ${
-          darkMode 
-            ? 'bg-gradient-to-br from-slate-800/40 via-transparent to-blue-900/20' 
-            : 'bg-gradient-to-br from-blue-50/40 via-transparent to-white/60'
-        }`}></div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative z-10">
+      <div className="text-xs text-slate-600 max-w-16 md:max-w-20 leading-tight">
+        {title}
+      </div>
+    </div>
+  </div>
+);
+
+const ConnectionLine = ({ isActive }) => (
+  <div className="flex-1 h-1 mx-2 md:mx-4 mt-6 md:mt-8">
+    <div
+      className={`h-full rounded-full transition-all duration-500 ${
+        isActive
+          ? "bg-gradient-to-r from-sky-300 via-sky-400 to-blue-500 shadow-sm"
+          : "bg-gradient-to-r from-slate-300 to-gray-300"
+      }`}
+    ></div>
+  </div>
+);
+
+// Custom hook for swipe gestures
+const useSwipe = (onSwipedLeft, onSwipedRight) => {
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = useCallback((e) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+
+    const distance = touchStartRef.current - touchEndRef.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && onSwipedLeft) {
+      onSwipedLeft();
+    } else if (isRightSwipe && onSwipedRight) {
+      onSwipedRight();
+    }
+  }, [onSwipedLeft, onSwipedRight]);
+
+  return {
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
+  };
+};
+
+export default function SupplyChainTimeline({ data = timelineData }) {
+  const [activeStep, setActiveStep] = useState(0);
+
+  const handleSwipeLeft = useCallback(() => {
+    setActiveStep((prev) => Math.min(data.length - 1, prev + 1));
+  }, [data.length]);
+
+  const handleSwipeRight = useCallback(() => {
+    setActiveStep((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const swipeHandlers = useSwipe(handleSwipeLeft, handleSwipeRight);
+
+  // Keyboard navigation functionality
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          setActiveStep((prev) => Math.max(0, prev - 1));
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          setActiveStep((prev) => Math.min(data.length - 1, prev + 1));
+          break;
+        case 'Home':
+          event.preventDefault();
+          setActiveStep(0);
+          break;
+        case 'End':
+          event.preventDefault();
+          setActiveStep(data.length - 1);
+          break;
+        default:
+          break;
+      }
+    };
+
+    // Add event listener
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [data.length]);
+
+  const currentStep = data[activeStep];
+
+  return (
+    <div className="max-w-7xl mx-auto p-3 md:p-4 bg-gradient-to-br from-sky-50/70 via-blue-50/50 to-cyan-50/70 py-6">
+      {/* Header */}
+      <div className="text-center mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-sky-600 via-blue-700 to-cyan-800 bg-clip-text text-transparent mb-2 md:mb-3 tracking-tight">
+          Product Journey
+        </h1>
+        <p className="text-sm md:text-lg text-slate-700 leading-relaxed font-medium">
+          Complete transparency from farm to your table
+        </p>
+      </div>
+
+      {/* Timeline Steps */}
+      <div className="mb-6 md:mb-8">
+        <div className="flex items-center justify-center pb-4">
           {data.map((step, index) => (
-            <div key={step.id} className="relative">
-              {/* Step Card */}
-              <div className={`rounded-3xl p-8 text-center transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 backdrop-blur-lg relative overflow-hidden ${
-                darkMode 
-                  ? 'bg-gradient-to-br from-slate-700/90 via-slate-600/80 to-slate-700/90 border border-slate-600/50' 
-                  : 'bg-gradient-to-br from-white/90 via-blue-50/60 to-white/90 border border-blue-200/50'
-              }`}>
-                {/* Background decoration */}
-                <div className={`absolute inset-0 ${
-                  darkMode 
-                    ? 'bg-gradient-to-br from-blue-900/30 via-transparent to-slate-800/30' 
-                    : 'bg-gradient-to-br from-blue-100/50 via-transparent to-white/50'
-                }`}></div>
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-blue-300/20 to-transparent rounded-3xl"></div>
-                
-                {/* Icon */}
-                <div className="relative mx-auto mb-6 z-10">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-3xl flex items-center justify-center shadow-xl">
-                    <div className="text-white">
-                      {stepIcons[index]}
-                    </div>
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-7 h-7 bg-white rounded-full border-2 border-blue-600 flex items-center justify-center shadow-lg">
-                    <span className="text-sm font-bold text-blue-600">{step.id}</span>
-                  </div>
-                </div>
-                
-                {/* Content */}
-                <h3 className={`font-bold text-xl mb-4 relative z-10 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>
-                  {step.title}
-                </h3>
-                
-                <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-600 text-white mb-6 shadow-lg relative z-10">
-                  <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-                  completed
-                </div>
-                
-                <div className={`space-y-3 mb-6 relative z-10 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <div className="flex items-center justify-center text-sm">
-                    <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="font-semibold">{step.date}</span>
-                  </div>
-                  <div className="flex items-center justify-center text-sm">
-                    <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    </svg>
-                    <span className="font-semibold">{step.location}</span>
-                  </div>
-                </div>
-                
-                <p className={`text-sm leading-relaxed relative z-10 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                  {step.desc}
-                </p>
+            <React.Fragment key={step.id}>
+              <div
+                className="cursor-pointer transition-transform hover:scale-105 flex-shrink-0"
+                onClick={() => setActiveStep(index)}
+              >
+                <StepIndicator
+                  stepNumber={index + 1}
+                  isActive={activeStep === index}
+                  isCompleted={index < activeStep}
+                  icon={step.icon}
+                  title={step.title}
+                />
               </div>
-              
-              {/* Connection Arrow */}
               {index < data.length - 1 && (
-                <div className="hidden md:block absolute top-10 -right-4 z-10">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
+                <ConnectionLine isActive={index < activeStep} />
               )}
-            </div>
+            </React.Fragment>
           ))}
         </div>
       </div>
+
+      {/* Step Details with Swipe Support */}
+      <div
+        className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl shadow-slate-300/20 border border-sky-200/50 overflow-hidden focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-opacity-50"
+        {...swipeHandlers}
+        tabIndex={0}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-sky-300/90 via-sky-400/90 to-blue-500/90 px-4 md:px-6 py-3 md:py-4 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-200/30 to-blue-400/30"></div>
+          <div className="relative flex items-center text-white">
+            <div className="w-10 h-10 md:w-14 md:h-14 bg-white/25 backdrop-blur-sm rounded-xl flex items-center justify-center text-xl md:text-2xl mr-3 md:mr-4 shadow-lg border border-white/20">
+              {currentStep.icon}
+            </div>
+            <div>
+              <h2 className="text-lg md:text-2xl font-bold tracking-wide">
+                Step {activeStep + 1}: {currentStep.title}
+              </h2>
+              <p className="text-white/90 text-xs md:text-base mt-1 font-medium">
+                {currentStep.date} • {currentStep.location}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-3 md:p-6 bg-gradient-to-br from-sky-50/40 via-blue-50/30 to-cyan-50/40">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            {/* Basic Information - Always shown */}
+            <div>
+              <div className="space-y-2">
+                {Object.entries(currentStep.basicInfo).map(
+                  ([label, value], idx) => (
+                    <InfoRow key={idx} label={label} value={value} />
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* Detailed Information - Hidden on mobile */}
+            <div className="hidden lg:block">
+              <div className="space-y-2">
+                {Object.entries(currentStep.detailedInfo).map(
+                  ([label, value], idx) => (
+                    <InfoRow key={idx} label={label} value={value} />
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation hints */}
+          <div className="text-center mt-4">
+            <div className="block md:hidden">
+              <p className="text-slate-600 text-sm font-medium">
+                ← Swipe to navigate →
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="hidden md:flex justify-between items-center mt-4 md:mt-6">
+            <button
+              onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
+              disabled={activeStep === 0}
+              className="flex items-center px-4 py-2 md:px-6 md:py-3 text-sm md:text-base bg-gradient-to-r from-sky-400 to-blue-500 text-white rounded-xl hover:from-sky-500 hover:to-blue-600 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl font-semibold focus:outline-none focus:ring-2 focus:ring-sky-400"
+            >
+              ⬅️ Previous Step
+            </button>
+
+            <div className="flex space-x-2">
+              {data.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveStep(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    index === activeStep
+                      ? "bg-gradient-to-r from-sky-400 to-blue-500 shadow-md scale-125 focus:ring-sky-400"
+                      : "bg-slate-300 hover:bg-sky-300 focus:ring-sky-400"
+                  }`}
+                  aria-label={`Go to step ${index + 1}`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={() =>
+                setActiveStep(Math.min(data.length - 1, activeStep + 1))
+              }
+              disabled={activeStep === data.length - 1}
+              className="flex items-center px-4 py-2 md:px-6 md:py-3 text-sm md:text-base bg-gradient-to-r from-sky-400 to-blue-500 text-white rounded-xl hover:from-sky-500 hover:to-blue-600 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl font-semibold focus:outline-none focus:ring-2 focus:ring-sky-400"
+            >
+              Next Step ➡️
+            </button>
+          </div>
+
+          {/* Mobile-only pagination */}
+          <div className="flex md:hidden justify-center items-center mt-4">
+            <div className="flex space-x-4">
+              {data.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveStep(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    index === activeStep
+                      ? "bg-gradient-to-r from-sky-400 to-blue-500 shadow-md scale-125 focus:ring-sky-400"
+                      : "bg-slate-300 hover:bg-sky-300 focus:ring-sky-400"
+                  }`}
+                  aria-label={`Go to step ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  )
+  );
 }

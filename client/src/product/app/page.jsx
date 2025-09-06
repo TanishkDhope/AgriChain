@@ -1,23 +1,32 @@
 "use client";
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ProductInfo from "../components/ProductInfo.jsx";
 import Timeline from "../components/Timeline.jsx";
 import Reviews from "../components/Reviews.jsx";
 import Actions from "../components/Actions.jsx";
 import ProductGallery from "../components/ProductGallery.jsx";
 import { productData, timelineData, reviewsData } from "../lib/data.js";
-import { Leaf } from "lucide-react";
+import { Leaf, User, LogOut, Globe } from "lucide-react";
+import { Button } from "../components/button.jsx";
 
-export default function ProductPage() {
+export default function ProductPage({ onLogout }) {
   const [showQR, setShowQR] = useState(false);
-  const [language, setLanguage] = useState("EN");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
 
-  const languages = ["EN", "ES", "FR", "DE", "HI"];
+  // Logout handler
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
-      {/* Header with AgriChain styling */}
+      {/* Header with AgriChain styling - Same as ConsumerHomePage */}
       <header
         className="text-white shadow-2xl sticky top-0 z-50"
         style={{
@@ -46,33 +55,37 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* Language Selector */}
-            <div className="flex items-center space-x-4">
-              <div className="relative group">
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="appearance-none px-5 py-3 rounded-2xl text-sm font-semibold border-2 cursor-pointer shadow-xl backdrop-blur-md group-hover:scale-105 bg-white/90 border-white/30 text-slate-700 hover:bg-white hover:border-white/50"
+            {/* Globe Icon and User Menu - Same as ConsumerHomePage */}
+            <div className="flex items-center gap-2 relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white rounded-xl hover:bg-white/20"
+              >
+                <Globe className="h-5 w-5" />
+              </Button>
+              
+              {/* User Icon with Logout */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="p-2 rounded-xl hover:bg-white/20 transition-colors"
                 >
-                  {languages.map((lang) => (
-                    <option key={lang} value={lang}>
-                      {lang}
-                    </option>
-                  ))}
-                </select>
-                <svg
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none text-slate-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                  <User className="h-6 w-6" />
+                </button>
+
+                {/* Logout Dropdown */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -95,6 +108,14 @@ export default function ProductPage() {
           <Reviews data={reviewsData} />
         </div>
       </div>
+
+      {/* Click outside to close user menu */}
+      {showUserMenu && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowUserMenu(false)}
+        />
+      )}
 
       {/* Footer from AgriChain */}
       <footer className="bg-slate-900 text-slate-300 mt-16">

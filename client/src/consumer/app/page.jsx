@@ -38,13 +38,11 @@ export default function ConsumerHomePage({ onLogout }) {
 
   const handleCameraClick = () => {
     console.log("Opening camera...");
-    // Add camera functionality here
     setShowScanModal(false);
   };
 
   const handleUploadClick = () => {
     console.log("Opening file upload...");
-    // Add file upload functionality here
     setShowScanModal(false);
   };
 
@@ -60,11 +58,8 @@ export default function ConsumerHomePage({ onLogout }) {
     if (onLogout) {
       onLogout();
     }
-    navigate("/auth");
+    navigate("/");
   };
-
-  // Get user data from localStorage
-  const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
   return (
     <div
@@ -112,29 +107,18 @@ export default function ConsumerHomePage({ onLogout }) {
                 <Globe className="h-5 w-5" />
               </Button>
               
-              {/* User Avatar/Menu */}
+              {/* User Icon Only */}
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/20 transition-colors"
+                  className="p-2 rounded-xl hover:bg-white/20 transition-colors"
                 >
-                  <User className="h-5 w-5" />
-                  <span className="hidden sm:block text-sm font-medium">
-                    {userData.fullName || userData.phone || 'Consumer'}
-                  </span>
+                  <User className="h-6 w-6" />
                 </button>
 
-                {/* Dropdown Menu */}
+                {/* Logout Dropdown */}
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-gray-200">
-                      <p className="text-sm font-medium text-gray-900">
-                        {userData.fullName || 'Consumer'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {userData.email || userData.phone}
-                      </p>
-                    </div>
+                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"

@@ -8,7 +8,6 @@ export default function Reviews({ data }) {
     <div className="rounded-3xl shadow-2xl transition-all duration-300 overflow-hidden backdrop-blur-lg bg-gradient-to-br from-white/90 via-yellow-50/60 to-white/90 border border-yellow-200/50">
       <div className="px-8 py-8 border-b relative overflow-hidden bg-gradient-to-r from-yellow-100/90 via-amber-100/70 to-yellow-200/90 border-yellow-200/50">
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-transparent to-amber-500/20"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-yellow-400/30 to-transparent rounded-3xl"></div>
         <div className="flex items-center space-x-4 relative z-10">
           <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-xl">
             <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">

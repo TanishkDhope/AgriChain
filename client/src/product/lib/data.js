@@ -1,86 +1,115 @@
 export const productData = {
   name: "Tomatoes",
-  farm: "Green Valley Organic Farm, California",
-  fairPrice: {
-    farmer: 2.5,
-    retail: 4.99
-  },
+  farm: "Green Valley Organic Farm, Nashik",
+  fairPrice: { farmer: 20, retail: 45 },
   info: {
-    lotId: "LOT-2024-001",
-    farmId: "FARM-GreenValley-001",
+    lotId: "LOT12345",
+    farmId: "FARM-Nashik-001",
     quantity: "500 kg",
     grade: "Premium A+",
-    description: "Premium organic tomatoes grown using sustainable farming practices. These vine-ripened tomatoes are harvested at peak freshness and carefully graded for quality. Each tomato meets our strict standards for taste, texture, and nutritional value."
+    description: "Premium organic tomatoes grown using sustainable farming practices."
   },
   certification: {
-    title: "Certified Sustainable",
-    details: "Grown using organic practices with minimal environmental impact. Our certification ensures sustainable farming methods, soil health preservation, and biodiversity protection."
+    title: "Certified Organic",
+    details: "FSSAI certified organic farming practices with zero pesticide residue."
   }
 }
 
 export const timelineData = [
   {
     id: 1,
-    title: "Harvest",
-    date: "2024-01-15",
-    location: "Green Valley Farm",
-    desc: "Tomatoes harvested at optimal ripeness",
-    completed: true
+    title: "Farmer",
+    icon: "🌾",
+    date: "02 Sep 2025",
+    location: "Nashik, Maharashtra",
+    basicInfo: {
+      "📅 Date": "02 Sep 2025 (Harvest date)",
+      "📍 Location": "Nashik, Maharashtra (Farm/District)",
+      "👤 Farmer Name": "Ramesh Kumar"
+    },
+    detailedInfo: {
+      "📦 Quantity": "500 kg",
+      "💰 Price": "₹20/kg",
+      "🔗 Lot ID": "LOT12345",
+      "🔗 Blockchain Txn Hash": "0xabc123..."
+    }
   },
   {
     id: 2,
-    title: "Grading", 
-    date: "2024-01-15",
-    location: "Farm Processing Center",
-    desc: "Quality inspection and Premium A+ grading",
-    completed: true
+    title: "Distributor", 
+    icon: "🚚",
+    date: "03 Sep 2025",
+    location: "Nashik → Mumbai",
+    basicInfo: {
+      "📅 Date": "03 Sep 2025 (Dispatch date)",
+      "📍 Route": "Nashik → Mumbai",
+      "👤 Distributor Name": "FreshLogistics Pvt. Ltd."
+    },
+    detailedInfo: {
+      "📦 Quantity": "500 kg, cold storage",
+      "💰 Transport Cost": "₹5/kg",
+      "🌡️ Storage Method": "Cold Chain",
+      "🔗 Blockchain Txn Hash": "0xdef456..."
+    }
   },
   {
     id: 3,
-    title: "Packing",
-    date: "2024-01-16", 
-    location: "Distribution Center",
-    desc: "Eco-friendly packaging and labeling",
-    completed: true
+    title: "Market",
+    icon: "🏬", 
+    date: "04 Sep 2025",
+    location: "Vashi APMC Market, Mumbai",
+    basicInfo: {
+      "📅 Date": "04 Sep 2025 (Arrival at APMC)",
+      "📍 Location": "Vashi APMC Market, Mumbai",
+      "👤 Market Trader Name": "AgriTrade Ltd."
+    },
+    detailedInfo: {
+      "📦 Quantity": "490 kg, 10 kg lost in handling",
+      "💰 Price": "₹30/kg wholesale rate",
+      "📊 Loss %": "2% during handling",
+      "🔗 Blockchain Txn Hash": "0xghi789..."
+    }
   },
   {
     id: 4,
-    title: "Dispatch",
-    date: "2024-01-17",
-    location: "Regional Hub", 
-    desc: "Shipped via refrigerated transport",
-    completed: true
-  },
-  {
-    id: 5,
-    title: "Delivery",
-    date: "2024-01-18",
-    location: "Retail Store",
-    desc: "Delivered to Fresh Market Co.",
-    completed: true
+    title: "Retailer",
+    icon: "🏪",
+    date: "05 Sep 2025", 
+    location: "Andheri, Mumbai",
+    basicInfo: {
+      "📅 Date": "05 Sep 2025 (Arrival at store)",
+      "📍 Location": "Andheri, Mumbai", 
+      "👤 Retailer Name": "BigMart Mumbai"
+    },
+    detailedInfo: {
+      "📦 Quantity": "480 kg after losses",
+      "💰 Price": "₹45/kg retail rate",
+      "📄 Contract Price Paid": "₹35/kg (to distributor/market)",
+      "🔗 Blockchain Txn Hash": "0xjkl012..."
+    }
   }
-]
+];
 
 export const reviewsData = [
   {
     id: 1,
-    name: "Sarah Johnson",
+    name: "Priya Sharma",
     rating: 5,
-    date: "2024-01-20",
-    review: "Amazing quality! You can really taste the difference with these organic tomatoes. The traceability feature gives me complete confidence in what I'm buying."
+    date: "06 Sep 2025",
+    review: "Amazing quality tomatoes! The traceability feature gives me complete confidence in what I'm buying."
   },
   {
     id: 2,
-    name: "Mike Chen", 
+    name: "Amit Patel",
     rating: 5,
-    date: "2024-01-19",
-    review: "Love knowing exactly where my food comes from. The blockchain tracking gives me confidence and the tomatoes are absolutely delicious!"
+    date: "05 Sep 2025",
+    review: "Love the transparency! Being able to track from farm to store is incredible. Fresh and tasty."
   },
   {
     id: 3,
-    name: "Emma Davis",
+    name: "Sunita Desai",
     rating: 4,
-    date: "2024-01-18", 
-    review: "Great taste and freshness. The sustainability practices are impressive and you can really see the care that goes into growing these."
+    date: "05 Sep 2025",
+    review: "Great initiative! The blockchain tracking shows the complete journey. Quality is excellent."
   }
 ]
