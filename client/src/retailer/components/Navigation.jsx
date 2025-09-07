@@ -69,14 +69,14 @@ export default function Navigation({
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('scanHistory');
-    localStorage.removeItem('userSession');
-    localStorage.removeItem('issueReports');
-    
+    localStorage.removeItem("scanHistory");
+    localStorage.removeItem("userSession");
+    localStorage.removeItem("issueReports");
+
     setShowUserMenu(false);
-    
+
     setTimeout(() => {
-      window.location.href = 'http://localhost:5173/#/';
+      window.location.href = "/#/";
     }, 500);
   };
 
@@ -85,15 +85,18 @@ export default function Navigation({
       <nav className="bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 text-white shadow-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            
             {/* Left side - AgriChain Brand */}
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white/20 rounded-xl">
                 <Leaf className="h-7 w-7" />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold">AgriChain Retail</h1>
-                <p className="text-green-200 text-sm hidden sm:block">Supply Chain Transparency</p>
+                <h1 className="text-xl sm:text-2xl font-bold">
+                  AgriChain Retail
+                </h1>
+                <p className="text-green-200 text-sm hidden sm:block">
+                  Supply Chain Transparency
+                </p>
               </div>
             </div>
 
@@ -121,7 +124,6 @@ export default function Navigation({
 
             {/* Right side - User Menu Only (Removed Contract Count) */}
             <div className="flex items-center gap-4">
-              
               {/* User Dropdown */}
               <div className="relative">
                 <button
@@ -130,14 +132,16 @@ export default function Navigation({
                 >
                   <User className="h-6 w-6" />
                 </button>
-                
+
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <p className="font-medium text-gray-900">Retailer</p>
-                      <p className="text-xs text-gray-500">retail@agricchain.com</p>
+                      <p className="text-xs text-gray-500">
+                        retail@agricchain.com
+                      </p>
                     </div>
-                    <button 
+                    <button
                       onClick={() => {
                         setShowUserMenu(false);
                         setShowProfileModal(true);
@@ -147,7 +151,7 @@ export default function Navigation({
                       <User className="h-4 w-4" />
                       Profile Settings
                     </button>
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                     >
@@ -209,8 +213,8 @@ export default function Navigation({
 
       {/* Click outside to close user menu */}
       {showUserMenu && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setShowUserMenu(false)}
         />
       )}
