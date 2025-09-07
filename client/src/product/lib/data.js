@@ -13,7 +13,7 @@ export const productData = {
     title: "Certified Organic",
     details: "FSSAI certified organic farming practices with zero pesticide residue."
   }
-}
+};
 
 export const timelineData = [
   {
@@ -24,14 +24,14 @@ export const timelineData = [
     location: "Nashik, Maharashtra",
     basicInfo: {
       "📅 Date": "02 Sep 2025 (Harvest date)",
-      "📍 Location": "Nashik, Maharashtra (Farm/District)",
+      "📍 Location": "Nashik, Maharashtra",
       "👤 Farmer Name": "Ramesh Kumar"
     },
     detailedInfo: {
       "📦 Quantity": "500 kg",
       "💰 Price": "₹20/kg",
       "🔗 Lot ID": "LOT12345",
-      "🔗 Blockchain Txn Hash": "0xabc123..."
+      "🔗 Blockchain Hash": "0xabc123..."
     }
   },
   {
@@ -49,7 +49,7 @@ export const timelineData = [
       "📦 Quantity": "500 kg, cold storage",
       "💰 Transport Cost": "₹5/kg",
       "🌡️ Storage Method": "Cold Chain",
-      "🔗 Blockchain Txn Hash": "0xdef456..."
+      "🔗 Blockchain Hash": "0xdef456..."
     }
   },
   {
@@ -67,7 +67,7 @@ export const timelineData = [
       "📦 Quantity": "490 kg, 10 kg lost in handling",
       "💰 Price": "₹30/kg wholesale rate",
       "📊 Loss %": "2% during handling",
-      "🔗 Blockchain Txn Hash": "0xghi789..."
+      "🔗 Blockchain Hash": "0xghi789..."
     }
   },
   {
@@ -84,8 +84,8 @@ export const timelineData = [
     detailedInfo: {
       "📦 Quantity": "480 kg after losses",
       "💰 Price": "₹45/kg retail rate",
-      "📄 Contract Price Paid": "₹35/kg (to distributor/market)",
-      "🔗 Blockchain Txn Hash": "0xjkl012..."
+      "📄 Contract Price": "₹35/kg (to distributor)",
+      "🔗 Blockchain Hash": "0xjkl012..."
     }
   }
 ];
@@ -112,4 +112,4 @@ export const reviewsData = [
     date: "05 Sep 2025",
     review: "Great initiative! The blockchain tracking shows the complete journey. Quality is excellent."
   }
-]
+];

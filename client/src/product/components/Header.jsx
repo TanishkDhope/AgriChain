@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { User, LogOut, Package, Leaf } from "lucide-react";
+import { User, LogOut, Leaf } from "lucide-react";
 import Notification from "./Notification";
 
-export default function Header({ scanCount }) {
+export default function Header({ onLogout }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notification, setNotification] = useState("");
 
@@ -15,8 +15,9 @@ export default function Header({ scanCount }) {
     setNotification("You have been logged out successfully ✅");
 
     setTimeout(() => {
+      if (onLogout) onLogout();
       window.location.href = "/";
-    }, 1500); // slightly longer to let user see the message
+    }, 1500);
   };
 
   return (
@@ -37,11 +38,6 @@ export default function Header({ scanCount }) {
 
             {/* Right Side */}
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2 bg-white/20 rounded-xl px-3 py-2">
-                <Package className="h-4 w-4" />
-                <span className="text-sm font-medium">{scanCount} Scans</span>
-              </div>
-
               {/* User Menu */}
               <div className="relative">
                 <button
