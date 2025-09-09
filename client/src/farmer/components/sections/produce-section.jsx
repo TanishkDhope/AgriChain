@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { Button } from "../../../components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Input } from "../../../components/ui/input"
@@ -8,31 +8,171 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
 import { emptyProduce, produceTypes } from "../../lib/data"
+import { mint, getUserTokens } from "../../../blockchain/product_registry.js"
 
 export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [tokens, setTokens] = useState([]);
   const [form, setForm] = useState(emptyProduce())
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [isUploading, setIsUploading] = useState(false)
+
+  // ⚠️ Never hardcode JWT in production frontend!
+  const JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJiNmI3M2VlOS1lNzRlLTQ0YTEtODgxNi05Nzc4NWRhNjljZjYiLCJlbWFpbCI6InRhbmlzaGtkaG9wZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiNmU2ZjQxNWMzYjk0MmUyOTI4MzUiLCJzY29wZWRLZXlTZWNyZXQiOiI3YTQ5NjUxNjI1ZGE0YjU2MzYyYjRiNjIyOGEzM2M1MGI3MDRiM2MzZGE0MGZmMDI1M2MzY2YyMWFjNmE3YjgxIiwiZXhwIjoxNzg4NTg2Mjg3fQ.oYZeQNa7NcFKTysjoZ7O2iFbp0eeRNKUWBARJu3QW0U"
 
   const startAdd = () => {
     setEditing(null)
     setForm(emptyProduce())
+    setSelectedImage(null)
     setOpen(true)
   }
 
   const startEdit = (p) => {
     setEditing(p)
     setForm(p)
+    setSelectedImage(null)
     setOpen(true)
   }
 
-  const submit = () => {
-    if (editing) {
-      onUpdate(form)
-    } else {
-      onAdd({ ...form, id: crypto.randomUUID() })
+  // Handle file input
+  const handleFileChange = (e) => {
+    setSelectedImage(e.target.files[0])
+  }
+
+  const handleGetTokens = async () => {
+    const result = await getUserTokens();
+    setTokens(result);
+  };
+
+  useEffect(() => {
+    handleGetTokens()
+  }, [])
+
+  // Upload to IPFS and mint tokens
+  const uploadToIPFSAndMint = async () => {
+    try {
+      setIsUploading(true)
+      
+      if (!form.name || !form.type || !form.quantity || !form.basePrice || !form.locality) {
+        alert("Please fill in all required fields.")
+        return
+      }
+
+      let imageCid = null
+
+      // Step 1: Upload image first (if provided)
+      if (selectedImage) {
+        const imgData = new FormData()
+        imgData.append("file", selectedImage)
+        imgData.append("network", "public")
+
+        const imgUpload = await fetch("https://uploads.pinata.cloud/v3/files", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+          body: imgData,
+        })
+
+        const imgRes = await imgUpload.json()
+        console.log("Image upload response:", imgRes)
+        imageCid = imgRes?.data?.cid || null
+      }
+
+      // Step 2: Build JSON metadata including image CID and produce details
+      const metadata = {
+        name: form.name,
+        type: form.type,
+        quantity: form.quantity,
+        basePrice: form.basePrice,
+        locality: form.locality,
+        certificate: form.certificate || null,
+        image: imageCid ? `ipfs://${imageCid}` : null,
+        farmId: `FARM_${crypto.randomUUID()}`, // Generate unique farm ID
+        createdAt: new Date().toISOString(),
+      }
+
+      // Generate unique filename: farmId + timestamp
+      const fileName = `${metadata.farmId}_${Date.now()}.json`
+
+      const blob = new Blob([JSON.stringify(metadata, null, 2)], {
+        type: "application/json",
+      })
+      const jsonFile = new File([blob], fileName, {
+        type: "application/json",
+      })
+
+      const jsonData = new FormData()
+      jsonData.append("file", jsonFile)
+      jsonData.append("network", "public")
+
+      // Step 3: Upload JSON metadata to IPFS
+      const request = await fetch("https://uploads.pinata.cloud/v3/files", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${JWT}`,
+        },
+        body: jsonData,
+      })
+
+      const response = await request.json()
+      console.log("Metadata upload response:", response)
+      
+      const metadataCid = response?.data?.cid
+      if (!metadataCid) {
+        throw new Error("Failed to get metadata CID from IPFS upload")
+      }
+
+      // Step 4: Mint tokens with the metadata CID as URI
+      const tokenURI = `ipfs://${metadataCid}`
+      const mintAmount = form.quantity // Use quantity as the amount of tokens to mint
+      
+      console.log("Minting tokens with:", { amount: mintAmount, uri: tokenURI })
+      await mint(mintAmount, tokenURI)
+      
+      // Step 5: Update local state with the new produce item
+      const newProduceItem = {
+        ...form,
+        id: crypto.randomUUID(),
+        ipfsCid: metadataCid,
+        tokenURI: tokenURI,
+        imageCid: imageCid,
+      }
+
+      if (editing) {
+        onUpdate(newProduceItem)
+      } else {
+        onAdd(newProduceItem)
+      }
+
+      // Step 6: Refresh user tokens
+      try {
+        await getUserTokens()
+      } catch (error) {
+        console.log("Note: Could not refresh user tokens:", error)
+      }
+
+      alert(`Success! Metadata uploaded to IPFS (CID: ${metadataCid}) and ${mintAmount} tokens minted!`)
+      setOpen(false)
+      
+    } catch (error) {
+      console.error("Upload and mint error:", error)
+      alert(`Error: ${error.message}`)
+    } finally {
+      setIsUploading(false)
     }
-    setOpen(false)
+  }
+
+  const submit = () => {
+    if (editing && !selectedImage) {
+      // For editing without new image, just update locally
+      onUpdate(form)
+      setOpen(false)
+    } else {
+      // For new items or editing with new image, upload to IPFS and mint
+      uploadToIPFSAndMint()
+    }
   }
 
   const totalSkus = produce.length
@@ -82,7 +222,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                 </CardHeader>
                 <CardContent className="grid gap-2">
                   <img
-                    src={`/placeholder.svg?height=120&width=240&query=produce image placeholder`}
+                    src={p.imageCid ? `https://gateway.pinata.cloud/ipfs/${p.imageCid}` : `/placeholder.svg?height=120&width=240&query=produce image placeholder`}
                     alt={`${p.name} image`}
                     className="w-full h-28 object-cover rounded-md border"
                   />
@@ -93,6 +233,11 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                   <div className="text-sm text-muted-foreground">
                     Certificate: {p.certificate ? "Available" : "—"}
                   </div>
+                  {p.ipfsCid && (
+                    <div className="text-xs text-blue-600">
+                      IPFS CID: {p.ipfsCid.slice(0, 10)}...
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter className="flex items-center justify-between">
                   <Button variant="outline" size="sm" onClick={() => startEdit(p)}>
@@ -118,6 +263,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                   <TableHead>Base Price</TableHead>
                   <TableHead>Locality</TableHead>
                   <TableHead>Certificate</TableHead>
+                  <TableHead>IPFS CID</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -130,6 +276,9 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                     <TableCell>₹{p.basePrice}</TableCell>
                     <TableCell>{p.locality}</TableCell>
                     <TableCell>{p.certificate ? "Yes" : "No"}</TableCell>
+                    <TableCell className="text-xs">
+                      {p.ipfsCid ? `${p.ipfsCid.slice(0, 10)}...` : "—"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button size="sm" variant="outline" onClick={() => startEdit(p)}>
@@ -148,28 +297,42 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
         </TabsContent>
       </Tabs>
 
+      <div>
+        {tokens?.map((t, idx) => (
+          <div key={idx} className="token-card">
+            <img src={t.image} alt={t.name} />
+            <h3>{t.name}</h3>
+            <p>ID: {t.id.toString()}</p>
+            <p>Balance: {t.balance}</p>
+            <p>{t.description}</p>
+          </div>
+        ))}
+      </div>
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <span className="sr-only">Open Produce Dialog</span>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit Produce" : "Add Produce"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
-            <LabeledInput label="Name">
+            <LabeledInput label="Name *">
               <Input
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="Tomatoes"
+                required
               />
             </LabeledInput>
-            <LabeledInput label="Type">
+            <LabeledInput label="Type *">
               <Input
                 list="produce-types"
                 value={form.type}
                 onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
                 placeholder="Vegetable"
+                required
               />
               <datalist id="produce-types">
                 {produceTypes.map((t) => (
@@ -177,29 +340,32 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                 ))}
               </datalist>
             </LabeledInput>
-            <LabeledInput label="Quantity (kg)">
+            <LabeledInput label="Quantity (kg) *">
               <Input
                 type="number"
                 min={0}
                 value={form.quantity}
                 onChange={(e) => setForm((f) => ({ ...f, quantity: Number(e.target.value) }))}
                 placeholder="100"
+                required
               />
             </LabeledInput>
-            <LabeledInput label="Base Price (₹/kg)">
+            <LabeledInput label="Base Price (₹/kg) *">
               <Input
                 type="number"
                 min={0}
                 value={form.basePrice}
                 onChange={(e) => setForm((f) => ({ ...f, basePrice: Number(e.target.value) }))}
                 placeholder="25"
+                required
               />
             </LabeledInput>
-            <LabeledInput label="Locality">
+            <LabeledInput label="Locality *">
               <Input
                 value={form.locality}
                 onChange={(e) => setForm((f) => ({ ...f, locality: e.target.value }))}
                 placeholder="Nashik, MH"
+                required
               />
             </LabeledInput>
             <LabeledInput label="Quality Certificate URL (optional)">
@@ -209,13 +375,30 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                 placeholder="https://gateway/your-cert"
               />
             </LabeledInput>
+            <LabeledInput label="Produce Image">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              />
+              {selectedImage && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selected: {selectedImage.name}
+                </p>
+              )}
+            </LabeledInput>
           </div>
           <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={isUploading}>
               Cancel
             </Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={submit}>
-              {editing ? "Save Changes" : "Add Produce"}
+            <Button 
+              className="bg-emerald-600 hover:bg-emerald-700" 
+              onClick={submit}
+              disabled={isUploading}
+            >
+              {isUploading ? "Uploading & Minting..." : (editing ? "Save Changes" : "Add & Mint Tokens")}
             </Button>
           </div>
         </DialogContent>
