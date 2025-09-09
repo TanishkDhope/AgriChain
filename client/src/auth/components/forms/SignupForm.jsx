@@ -6,6 +6,9 @@ import {
   validatePassword,
 } from "../../lib/validators";
 import { formatPhone, formatAadhaar } from "../../lib/helpers";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../../../../firebase.js"; // adjust path if needed
 
 export default function SignupForm({ onSuccess }) {
   const [form, setForm] = useState({
@@ -68,39 +71,48 @@ export default function SignupForm({ onSuccess }) {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validate()) return;
 
-    setIsSubmitting(true);
-    setApiError("");
+  setIsSubmitting(true);
+  setApiError("");
 
-    try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: form.fullName.trim(),
-          phone: form.phone,
-          email: form.email,
-          aadhaar: form.aadhaar,
-          password: form.password,
-        }),
-      });
+  try {
+    // 1. Create user in Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      form.email,
+      form.password
+    );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Registration failed");
-      }
+    const user = userCredential.user;
 
-      const userData = await response.json();
-      onSuccess(userData);
-    } catch (error) {
-      setApiError(error.message || "Registration failed. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    // 2. Update display name in Firebase Auth
+    await updateProfile(user, {
+      displayName: form.fullName,
+    });
+
+    // 3. Save user profile to Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      fullName: form.fullName,
+      phone: form.phone,
+      email: form.email,
+      aadhaar: form.aadhaar,
+      createdAt: new Date().toISOString(),
+    });
+
+    // 4. Trigger onSuccess callback (e.g., redirect or show success)
+    onSuccess(user);
+
+  } catch (error) {
+    console.error("Firebase signup error:", error);
+    setApiError(error.message || "Registration failed. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const getPasswordStrength = (password) => {
     const { errors: pwdErrors } = validatePassword(password);

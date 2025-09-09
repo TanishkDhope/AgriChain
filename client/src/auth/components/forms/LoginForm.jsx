@@ -5,9 +5,12 @@ import {
   validateAadhaar,
 } from "../../lib/validators";
 import { formatPhone, formatAadhaar } from "../../lib/helpers";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../../../firebase.js"; // adjust path if needed
 
 export default function LoginForm({ onSuccess }) {
-  const [form, setForm] = useState({ phone: "", email: "", aadhaar: "" });
+  const [form, setForm] = useState({ phone: "", email: "", aadhaar: "", password: "" });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -29,14 +32,20 @@ export default function LoginForm({ onSuccess }) {
   const validate = () => {
     const errs = {};
 
+    if (!form.email) {
+      errs.email = "Email is required for login";
+    } else if (!validateEmail(form.email)) {
+      errs.email = "Please enter a valid email address";
+    }
+
+    if (!form.password) {
+      errs.password = "Password is required";
+    }
+
     if (!form.phone) {
       errs.phone = "Phone number is required";
     } else if (!validatePhone(form.phone)) {
       errs.phone = "Please enter a valid Indian mobile number";
-    }
-
-    if (form.email && !validateEmail(form.email)) {
-      errs.email = "Please enter a valid email address";
     }
 
     if (!form.aadhaar) {
@@ -57,13 +66,37 @@ export default function LoginForm({ onSuccess }) {
     setApiError("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // mock API
+      // 1. Firebase Auth login
+      const userCredential = await signInWithEmailAndPassword(auth, form.email, form.password);
+      const user = userCredential.user;
+
+      // 2. Fetch user profile from Firestore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (!userDoc.exists()) {
+        throw new Error("User profile not found. Please contact support.");
+      }
+
+      const userData = userDoc.data();
+
+      // 3. Extra checks (phone & Aadhaar match)
+      if (userData.phone !== form.phone || userData.aadhaar !== form.aadhaar) {
+        throw new Error("Phone or Aadhaar number does not match our records.");
+      }
+
+      // 4. Success
       onSuccess({
-        ...form,
+        ...userData,
         loginTime: new Date().toISOString(),
       });
     } catch (error) {
-      setApiError(error.message || "Login failed. Please try again.");
+      console.error("Login error:", error);
+      setApiError(
+        error.code === "auth/user-not-found"
+          ? "No account found with this email."
+          : error.code === "auth/wrong-password"
+          ? "Incorrect password."
+          : error.message || "Login failed. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -76,6 +109,44 @@ export default function LoginForm({ onSuccess }) {
           <p className="text-sm text-red-600 flex items-center gap-2">⚠️ {apiError}</p>
         </div>
       )}
+
+      {/* Email */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          Email Address *
+        </label>
+        <input
+          id="email"
+          type="email"
+          placeholder="Enter your email address"
+          value={form.email}
+          onChange={(e) => handleChange("email", e.target.value)}
+          className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors ${
+            errors.email ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-gray-400"
+          }`}
+          disabled={isSubmitting}
+        />
+        {errors.email && <p className="text-sm text-red-500 mt-2">{errors.email}</p>}
+      </div>
+
+      {/* Password */}
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+          Password *
+        </label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Enter your password"
+          value={form.password}
+          onChange={(e) => handleChange("password", e.target.value)}
+          className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors ${
+            errors.password ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-gray-400"
+          }`}
+          disabled={isSubmitting}
+        />
+        {errors.password && <p className="text-sm text-red-500 mt-2">{errors.password}</p>}
+      </div>
 
       {/* Phone */}
       <div>
@@ -93,30 +164,8 @@ export default function LoginForm({ onSuccess }) {
           }`}
           disabled={isSubmitting}
           maxLength="10"
-        />
+        /> 
         {errors.phone && <p className="text-sm text-red-500 mt-2">{errors.phone}</p>}
-        {form.phone && !errors.phone && (
-          <p className="text-sm text-green-600 mt-1 flex items-center gap-1">✓ Valid phone number</p>
-        )}
-      </div>
-
-      {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-          Email (Optional)
-        </label>
-        <input
-          id="email"
-          type="email"
-          placeholder="Enter your email address"
-          value={form.email}
-          onChange={(e) => handleChange("email", e.target.value)}
-          className={`w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors ${
-            errors.email ? "border-red-300 bg-red-50" : "border-gray-300 hover:border-gray-400"
-          }`}
-          disabled={isSubmitting}
-        />
-        {errors.email && <p className="text-sm text-red-500 mt-2">{errors.email}</p>}
       </div>
 
       {/* Aadhaar */}
@@ -137,9 +186,6 @@ export default function LoginForm({ onSuccess }) {
           maxLength="12"
         />
         {errors.aadhaar && <p className="text-sm text-red-500 mt-2">{errors.aadhaar}</p>}
-        {form.aadhaar && !errors.aadhaar && (
-          <p className="text-sm text-green-600 mt-1 flex items-center gap-1">✓ Valid Aadhaar number</p>
-        )}
       </div>
 
       {/* Submit */}
