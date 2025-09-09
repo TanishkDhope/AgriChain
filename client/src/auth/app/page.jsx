@@ -3,13 +3,11 @@ import { useNavigate } from "react-router-dom";
 import LoginForm from "../components/forms/LoginForm";
 import SignupForm from "../components/forms/SignupForm";
 import RoleSelection from "../components/RoleSelection";
-import "../styles/auth.css";
 
 export default function AuthPage({ onAuthSuccess }) {
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [tab, setTab] = useState("login");
   const [userData, setUserData] = useState(null);
-  const navigate = useNavigate();
 
   const handleAuthSuccess = (data) => {
     setUserData(data);
@@ -19,73 +17,76 @@ export default function AuthPage({ onAuthSuccess }) {
   const handleRoleSelected = (role) => {
     const completeUserData = { ...userData, role };
     
-    // Store user data
+    // Store complete user data
     localStorage.setItem('user', JSON.stringify(completeUserData));
     
-    // Call parent callback
-    onAuthSuccess(completeUserData);
-    
-    // Navigate to appropriate page based on role
-    navigate(`/${role}`);
+    // Call parent callback if provided
+    if (onAuthSuccess) {
+      onAuthSuccess(completeUserData);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setShowRoleSelection(false);
+    setUserData(null);
   };
 
   if (showRoleSelection) {
     return (
       <RoleSelection 
-        onBack={() => setShowRoleSelection(false)}
+        onBack={handleBackToLogin}
         onRoleSelect={handleRoleSelected}
       />
     );
   }
 
   return (
-    <div className="min-h-screen bg-green-50 flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg border p-6">
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="mx-auto mb-4 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <main className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+        
+        {/* Header */}
+        <header className="text-center mb-6">
+          <div className="mx-auto mb-3 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">
             🌱
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">AgriTrack</h1>
-          <p className="text-sm text-gray-600 mt-1">Connecting Agriculture</p>
-        </div>
+          <h1 className="text-2xl font-bold text-gray-900">AgriChain</h1>
+          <p className="text-sm text-gray-600">Farm to Fork Traceability System</p>
+        </header>
 
-        {/* Tabs */}
-        <div className="grid grid-cols-2 mb-6 border rounded-lg overflow-hidden bg-gray-50">
+        {/* Navigation Tabs */}
+        <nav className="flex border-b mb-6">
           <button
-            className={`py-3 font-medium transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
               tab === "login" 
-                ? "bg-green-600 text-white shadow-sm" 
-                : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                ? "border-green-500 text-green-600" 
+                : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
             onClick={() => setTab("login")}
           >
             Login
           </button>
           <button
-            className={`py-3 font-medium transition-all duration-200 ${
+            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
               tab === "signup" 
-                ? "bg-green-600 text-white shadow-sm" 
-                : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+                ? "border-green-500 text-green-600" 
+                : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
             onClick={() => setTab("signup")}
           >
-            Signup
+            Sign Up
           </button>
+        </nav>
+
+        {/* Form Content */}
+        <div>
+          {tab === "login" ? (
+            <LoginForm onSuccess={handleAuthSuccess} />
+          ) : (
+            <SignupForm onSuccess={handleAuthSuccess} />
+          )}
         </div>
 
-        {/* Forms */}
-        {tab === "login" ? (
-          <LoginForm onSuccess={handleAuthSuccess} />
-        ) : (
-          <SignupForm onSuccess={handleAuthSuccess} />
-        )}
-
-        {/* Footer */}
-        <div className="mt-6 text-center text-xs text-gray-500">
-          <p>By continuing, you agree to our Terms of Service</p>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
