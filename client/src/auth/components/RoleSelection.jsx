@@ -13,7 +13,7 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
       title: "Farmer",
       description: "Manage crops, set prices, and sell directly to buyers",
       icon: User,
-      color: "green",
+      color: "yellow",
       features: ["Crop Management", "Direct Sales", "Price Control"],
       stats: { users: "50K+", growth: "25%", rating: "4.8" }
     },
@@ -31,7 +31,7 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
       title: "Consumer", 
       description: "Buy fresh produce and trace its journey from farm",
       icon: ShoppingCart,
-      color: "orange",
+      color: "rose",
       features: ["QR Code Scanning", "Product Traceability", "Fresh Guarantee"],
       stats: { users: "100K+", growth: "45%", rating: "4.9" }
     }
@@ -65,11 +65,11 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
 
   const getColorClasses = (color, isSelected) => {
     const colors = {
-      green: {
-        bg: isSelected ? 'bg-green-50 border-green-500 ring-2 ring-green-200' : 'bg-white border-gray-200 hover:border-green-300 hover:shadow-md',
-        button: 'bg-green-600 hover:bg-green-700 focus:ring-green-200',
-        icon: 'text-green-600',
-        text: 'text-green-700'
+      yellow: {
+        bg: isSelected ? 'bg-yellow-50 border-yellow-500 ring-2 ring-yellow-200' : 'bg-white border-gray-200 hover:border-yellow-300 hover:shadow-md',
+        button: 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-200',
+        icon: 'text-yellow-600',
+        text: 'text-yellow-700'
       },
       blue: {
         bg: isSelected ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200' : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md',
@@ -77,18 +77,18 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
         icon: 'text-blue-600',
         text: 'text-blue-700'
       },
-      orange: {
-        bg: isSelected ? 'bg-orange-50 border-orange-500 ring-2 ring-orange-200' : 'bg-white border-gray-200 hover:border-orange-300 hover:shadow-md',
-        button: 'bg-orange-600 hover:bg-orange-700 focus:ring-orange-200',
-        icon: 'text-orange-600',
-        text: 'text-orange-700'
+      rose: {
+        bg: isSelected ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-200' : 'bg-white border-gray-200 hover:border-rose-300 hover:shadow-md',
+        button: 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-200',
+        icon: 'text-rose-600',
+        text: 'text-rose-700'
       }
     };
     return colors[color];
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 p-6">
       <div className="max-w-5xl mx-auto">
         
         {/* Header */}
