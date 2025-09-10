@@ -10,9 +10,23 @@ export default function AuthPage({ onAuthSuccess }) {
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
-  const handleAuthSuccess = (data) => {
+  // Modified to handle different sources (login vs signup)
+  const handleAuthSuccess = (data, source) => {
     setUserData(data);
-    setShowRoleSelection(true);
+    
+    if (source === "signup") {
+      // From signup -> Show role selection
+      setShowRoleSelection(true);
+    } else if (source === "login") {
+      // From login -> Direct redirect to retailer dashboard
+      localStorage.setItem("user", JSON.stringify(data));
+      
+      if (onAuthSuccess) {
+        onAuthSuccess(data);
+      }
+      
+      window.location.href = "/#/dashboard/retailer";
+    }
   };
 
   const handleRoleSelected = (role) => {
@@ -25,6 +39,9 @@ export default function AuthPage({ onAuthSuccess }) {
     if (onAuthSuccess) {
       onAuthSuccess(completeUserData);
     }
+
+    // Navigate to role-specific dashboard
+    navigate(`/dashboard/${role}`);
   };
 
   const handleBackToLogin = () => {
@@ -43,7 +60,7 @@ export default function AuthPage({ onAuthSuccess }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50  flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 flex items-center justify-center p-4">
       <main className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
         {/* Header */}
         <header className="text-center mb-6">
@@ -83,9 +100,9 @@ export default function AuthPage({ onAuthSuccess }) {
         {/* Form Content */}
         <div>
           {tab === "login" ? (
-            <LoginForm onSuccess={handleAuthSuccess} />
+            <LoginForm onSuccess={(data) => handleAuthSuccess(data, "login")} />
           ) : (
-            <SignupForm onSuccess={handleAuthSuccess} />
+            <SignupForm onSuccess={(data) => handleAuthSuccess(data, "signup")} />
           )}
         </div>
       </main>

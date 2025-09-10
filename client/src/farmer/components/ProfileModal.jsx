@@ -1,30 +1,29 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
-import { Badge } from "./ui/badge";
-import { Globe, Moon, Sun, LogOut, X, User, ShoppingCart, MapPin, Phone, Mail, Building } from "lucide-react";
+} from "../components/ui/select";
+import { Badge } from "../components/ui/badge";
+import { Globe, Moon, Sun, LogOut, X, User, Sprout, MapPin, Phone, Mail } from "lucide-react";
 
-// Retailer-specific profile data
-const retailerProfile = {
-  organizationName: "AgriChain Retail Store",
-  contactPerson: "John Smith",
-  email: "retail@agricchain.com",
+// Farmer-specific profile data
+const farmerProfile = {
+  farmerName: "Rajesh Kumar",
+  farmName: "Green Valley Farm",
+  email: "farmer@agricchain.com",
   phone: "+91 9876543210",
-  businessAddress: "123 Market Street, Mumbai, Maharashtra 400001",
-  businessType: "Agricultural Retailer",
-  gstNumber: "27ABCDE1234F1Z5",
-  licenseNumber: "AGR-LIC-2024-001",
-  type: "Retail Business",
+  farmAddress: "Village Kisan Nagar, Nashik, Maharashtra 422001",
+  farmSize: "5.2 acres",
+  cropTypes: "Vegetables, Fruits, Grains",
+  type: "Registered Farmer",
   status: "Verified",
-  establishedYear: "2018",
+  experience: "12 years",
 };
 
 const filterOptions = {
@@ -35,11 +34,10 @@ const filterOptions = {
     { value: "gu", label: "Gujarati" },
     { value: "ta", label: "Tamil" },
   ],
-  businessTypes: [
-    { value: "wholesaler", label: "Wholesaler" },
-    { value: "retailer", label: "Retailer" },
-    { value: "distributor", label: "Distributor" },
-    { value: "cooperative", label: "Cooperative" },
+  farmTypes: [
+    { value: "organic", label: "Organic Farming" },
+    { value: "conventional", label: "Conventional" },
+    { value: "mixed", label: "Mixed Farming" },
   ],
 };
 
@@ -52,15 +50,15 @@ export default function ProfileModal({
   if (!isOpen) return null;
 
   const [formData, setFormData] = useState({
-    organizationName: retailerProfile.organizationName,
-    contactPerson: retailerProfile.contactPerson,
-    email: retailerProfile.email,
-    phone: retailerProfile.phone,
-    businessAddress: retailerProfile.businessAddress,
-    businessType: "retailer",
-    gstNumber: retailerProfile.gstNumber,
-    licenseNumber: retailerProfile.licenseNumber,
+    farmerName: farmerProfile.farmerName,
+    farmName: farmerProfile.farmName,
+    email: farmerProfile.email,
+    phone: farmerProfile.phone,
+    farmAddress: farmerProfile.farmAddress,
+    farmSize: farmerProfile.farmSize,
+    cropTypes: farmerProfile.cropTypes,
     language: "en",
+    farmType: "mixed",
   });
 
   const handleInputChange = (field, value) => {
@@ -82,7 +80,7 @@ export default function ProfileModal({
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-3xl font-bold text-gray-900">Retailer Profile</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Farmer Profile</h2>
           <Button
             variant="ghost"
             size="sm"
@@ -97,25 +95,25 @@ export default function ProfileModal({
           {/* Profile Section */}
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Business Details</CardTitle>
+              <CardTitle className="text-lg font-semibold">Farm Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Profile Header */}
               <div className="flex items-center space-x-4 pb-4 border-b border-gray-100">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
-                  <ShoppingCart className="w-8 h-8 text-blue-600" />
+                <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center">
+                  <Sprout className="w-8 h-8 text-emerald-600" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900">
-                    {formData.organizationName}
+                    {formData.farmerName}
                   </h3>
-                  <p className="text-gray-600">{retailerProfile.businessType}</p>
+                  <p className="text-gray-600">{farmerProfile.farmName}</p>
                   <div className="flex gap-2 mt-1">
-                    <Badge className="bg-green-100 text-green-800 border border-green-200">
-                      {retailerProfile.status}
+                    <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      {farmerProfile.status}
                     </Badge>
                     <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
-                      Est. {retailerProfile.establishedYear}
+                      {farmerProfile.experience}
                     </Badge>
                   </div>
                 </div>
@@ -125,24 +123,24 @@ export default function ProfileModal({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Organization Name
+                    Farmer Name
                   </label>
                   <Input
-                    value={formData.organizationName}
+                    value={formData.farmerName}
                     onChange={(e) =>
-                      handleInputChange("organizationName", e.target.value)
+                      handleInputChange("farmerName", e.target.value)
                     }
                     className="h-12 border-gray-200"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Contact Person
+                    Farm Name
                   </label>
                   <Input
-                    value={formData.contactPerson}
+                    value={formData.farmName}
                     onChange={(e) =>
-                      handleInputChange("contactPerson", e.target.value)
+                      handleInputChange("farmName", e.target.value)
                     }
                     className="h-12 border-gray-200"
                   />
@@ -170,32 +168,32 @@ export default function ProfileModal({
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    GST Number
+                    Farm Size
                   </label>
                   <Input
-                    value={formData.gstNumber}
+                    value={formData.farmSize}
                     onChange={(e) =>
-                      handleInputChange("gstNumber", e.target.value)
+                      handleInputChange("farmSize", e.target.value)
                     }
                     className="h-12 border-gray-200"
-                    placeholder="e.g., 27ABCDE1234F1Z5"
+                    placeholder="e.g., 5.2 acres"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Business Type
+                    Farm Type
                   </label>
                   <Select
-                    value={formData.businessType}
+                    value={formData.farmType}
                     onValueChange={(value) =>
-                      handleInputChange("businessType", value)
+                      handleInputChange("farmType", value)
                     }
                   >
                     <SelectTrigger className="h-12 border-gray-200">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {filterOptions.businessTypes.map((type) => (
+                      {filterOptions.farmTypes.map((type) => (
                         <SelectItem key={type.value} value={type.value}>
                           {type.label}
                         </SelectItem>
@@ -207,12 +205,12 @@ export default function ProfileModal({
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Business Address
+                  Farm Address
                 </label>
                 <Input
-                  value={formData.businessAddress}
+                  value={formData.farmAddress}
                   onChange={(e) =>
-                    handleInputChange("businessAddress", e.target.value)
+                    handleInputChange("farmAddress", e.target.value)
                   }
                   className="h-12 border-gray-200"
                 />
@@ -220,21 +218,21 @@ export default function ProfileModal({
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  License Number
+                  Crop Types
                 </label>
                 <Input
-                  value={formData.licenseNumber}
+                  value={formData.cropTypes}
                   onChange={(e) =>
-                    handleInputChange("licenseNumber", e.target.value)
+                    handleInputChange("cropTypes", e.target.value)
                   }
                   className="h-12 border-gray-200"
-                  placeholder="e.g., AGR-LIC-2024-001"
+                  placeholder="e.g., Vegetables, Fruits, Grains"
                 />
               </div>
 
               <Button
                 onClick={handleUpdateProfile}
-                className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700"
+                className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700"
               >
                 Update Profile
               </Button>
@@ -295,24 +293,24 @@ export default function ProfileModal({
             </CardContent>
           </Card>
 
-          {/* Business Statistics */}
+          {/* Farm Statistics */}
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Business Overview</CardTitle>
+              <CardTitle className="text-lg font-semibold">Farm Overview</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-green-50 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-green-600 mb-1">89</div>
-                  <div className="text-sm text-green-700">Active Contracts</div>
+                <div className="bg-emerald-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-emerald-600 mb-1">12</div>
+                  <div className="text-sm text-emerald-700">Active Contracts</div>
                 </div>
                 <div className="bg-blue-50 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-blue-600 mb-1">247</div>
-                  <div className="text-sm text-blue-700">Connected Farmers</div>
+                  <div className="text-2xl font-bold text-blue-600 mb-1">2,450</div>
+                  <div className="text-sm text-blue-700">Total Produce (kg)</div>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">1,234</div>
-                  <div className="text-sm text-purple-700">Lots Verified</div>
+                  <div className="text-2xl font-bold text-purple-600 mb-1">₹2,45,000</div>
+                  <div className="text-sm text-purple-700">Total Revenue</div>
                 </div>
               </div>
             </CardContent>
@@ -329,8 +327,8 @@ export default function ProfileModal({
                   <Mail className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{retailerProfile.email}</p>
-                  <p className="text-sm text-gray-600">Business Email</p>
+                  <p className="font-medium text-gray-900">{farmerProfile.email}</p>
+                  <p className="text-sm text-gray-600">Primary Email</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
@@ -338,8 +336,8 @@ export default function ProfileModal({
                   <Phone className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{retailerProfile.phone}</p>
-                  <p className="text-sm text-gray-600">Business Phone</p>
+                  <p className="font-medium text-gray-900">{farmerProfile.phone}</p>
+                  <p className="text-sm text-gray-600">Mobile Number</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
@@ -347,17 +345,8 @@ export default function ProfileModal({
                   <MapPin className="w-4 h-4 text-orange-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{retailerProfile.businessAddress}</p>
-                  <p className="text-sm text-gray-600">Business Address</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="p-2 rounded-lg bg-yellow-100">
-                  <Building className="w-4 h-4 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">{retailerProfile.gstNumber}</p>
-                  <p className="text-sm text-gray-600">GST Registration</p>
+                  <p className="font-medium text-gray-900">{farmerProfile.farmAddress}</p>
+                  <p className="text-sm text-gray-600">Farm Location</p>
                 </div>
               </div>
             </CardContent>
