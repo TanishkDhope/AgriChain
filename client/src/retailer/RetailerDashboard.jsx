@@ -20,11 +20,12 @@ export default function RetailerDashboard() {
     if (element) {
       const headerOffset = 80; // Height of your sticky nav (h-20 = 80px)
       const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      const offsetPosition =
+        elementPosition + window.pageYOffset - headerOffset;
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
 
       // Update active section immediately for better UX
@@ -35,24 +36,30 @@ export default function RetailerDashboard() {
   // Auto-detect active section on scroll
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['dashboard', 'farmers', 'contracts', 'transactions', 'qr'];
+      const sections = [
+        "dashboard",
+        "farmers",
+        "contracts",
+        "transactions",
+        "qr",
+      ];
       const scrollPosition = window.scrollY + 80; // Match navigation offset
       const scrollHeight = document.documentElement.scrollHeight;
       const viewportHeight = window.innerHeight;
-      
+
       // Check if user is at or near bottom of page (within 50px)
-      if ((window.pageYOffset + viewportHeight) >= (scrollHeight - 50)) {
-        setActiveSection('qr');
+      if (window.pageYOffset + viewportHeight >= scrollHeight - 50) {
+        setActiveSection("qr");
         return;
       }
-      
+
       // Normal section detection
       for (let i = sections.length - 1; i >= 0; i--) {
         const section = document.getElementById(sections[i]);
         if (section) {
           const sectionTop = section.offsetTop;
           const sectionBottom = sectionTop + section.offsetHeight;
-          
+
           if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
             setActiveSection(sections[i]);
             break;
@@ -61,11 +68,11 @@ export default function RetailerDashboard() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
     handleScroll(); // Call once to set initial active section
-    
+
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -78,27 +85,25 @@ export default function RetailerDashboard() {
         setShowProfileModal={setShowProfileModal}
       />
 
-      <main className="pt-20"> {/* Increased to match h-20 header */}
+      <main className="pt-20">
+        {" "}
+        {/* Increased to match h-20 header */}
         {/* Dashboard Section */}
         <section id="dashboard">
           <Dashboard />
         </section>
-
         {/* Farmers Section */}
         <section id="farmers">
           <Farmers />
         </section>
-
         {/* Contracts Section */}
         <section id="contracts">
           <Contracts />
         </section>
-
         {/* Transactions Section */}
         <section id="transactions">
           <Transactions />
         </section>
-
         {/* QR Scanner Section */}
         <section id="qr">
           <QRScanner />

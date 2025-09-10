@@ -16,15 +16,19 @@ function App() {
         {/* Default Route */}
         <Route path="/" element={<AuthPage />} />
 
-        {/* Auth */}
-        <Route path="/login" element={<AuthPage />} />
-
         {/* Dashboards */}
         <Route path="/dashboard/farmer" element={<FarmerPage />} />
         <Route path="/dashboard/retailer" element={<RetailerPage />} />
         <Route path="/dashboard/consumer" element={<ConsumerHomePage />} />
 
+        {/* Product Routes */}
+        <Route
+          path="/product/:batchId/:productName"
+          element={<ProductPage />}
+        />
         <Route path="/product" element={<ProductPage />} />
+        <Route path="/track/:batchId" element={<ProductPage />} />
+
         <Route path="/rs" element={<RoleSelection />} />
       </Routes>
     </Router>

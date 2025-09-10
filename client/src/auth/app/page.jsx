@@ -8,32 +8,51 @@ export default function AuthPage({ onAuthSuccess }) {
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [tab, setTab] = useState("login");
   const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
 
-  const handleAuthSuccess = (data) => {
+  // Modified to handle different sources (login vs signup)
+  const handleAuthSuccess = (data, source) => {
     setUserData(data);
-    setShowRoleSelection(true);
+    
+    if (source === "signup") {
+      // From signup -> Show role selection
+      setShowRoleSelection(true);
+    } else if (source === "login") {
+      // From login -> Direct redirect to retailer dashboard
+      localStorage.setItem("user", JSON.stringify(data));
+      
+      if (onAuthSuccess) {
+        onAuthSuccess(data);
+      }
+      
+      window.location.href = "/#/dashboard/retailer";
+    }
   };
 
   const handleRoleSelected = (role) => {
     const completeUserData = { ...userData, role };
-    
+
     // Store complete user data
-    localStorage.setItem('user', JSON.stringify(completeUserData));
-    
+    localStorage.setItem("user", JSON.stringify(completeUserData));
+
     // Call parent callback if provided
     if (onAuthSuccess) {
       onAuthSuccess(completeUserData);
     }
+
+    // Navigate to role-specific dashboard
+    navigate(`/dashboard/${role}`);
   };
 
   const handleBackToLogin = () => {
+    navigate('/');
     setShowRoleSelection(false);
     setUserData(null);
   };
 
   if (showRoleSelection) {
     return (
-      <RoleSelection 
+      <RoleSelection
         onBack={handleBackToLogin}
         onRoleSelect={handleRoleSelected}
       />
@@ -41,24 +60,25 @@ export default function AuthPage({ onAuthSuccess }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 flex items-center justify-center p-4">
       <main className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-        
         {/* Header */}
         <header className="text-center mb-6">
           <div className="mx-auto mb-3 w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl">
             🌱
           </div>
           <h1 className="text-2xl font-bold text-gray-900">AgriChain</h1>
-          <p className="text-sm text-gray-600">Farm to Fork Traceability System</p>
+          <p className="text-sm text-gray-600">
+            Farm to Fork Traceability System
+          </p>
         </header>
 
         {/* Navigation Tabs */}
         <nav className="flex border-b mb-6">
           <button
             className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-              tab === "login" 
-                ? "border-green-500 text-green-600" 
+              tab === "login"
+                ? "border-green-500 text-green-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
             onClick={() => setTab("login")}
@@ -67,8 +87,8 @@ export default function AuthPage({ onAuthSuccess }) {
           </button>
           <button
             className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-              tab === "signup" 
-                ? "border-green-500 text-green-600" 
+              tab === "signup"
+                ? "border-green-500 text-green-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
             onClick={() => setTab("signup")}
@@ -80,12 +100,11 @@ export default function AuthPage({ onAuthSuccess }) {
         {/* Form Content */}
         <div>
           {tab === "login" ? (
-            <LoginForm onSuccess={handleAuthSuccess} />
+            <LoginForm onSuccess={(data) => handleAuthSuccess(data, "login")} />
           ) : (
-            <SignupForm onSuccess={handleAuthSuccess} />
+            <SignupForm onSuccess={(data) => handleAuthSuccess(data, "signup")} />
           )}
         </div>
-
       </main>
     </div>
   );

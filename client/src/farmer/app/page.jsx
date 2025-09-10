@@ -6,133 +6,137 @@ import ProduceSection from "../components/sections/produce-section"
 import MarketSection from "../components/sections/market-section"
 import QnASection from "../components/sections/qna-section"
 import ReportsSection from "../components/sections/reports-section"
-import AccountSection from "../components/sections/account-section"
+import Footer from "../components/Footer"
+import ProfileModal from "../components/ProfileModal"  // Add ProfileModal import
 import { initialProduce } from "../lib/data"
-import { gsap } from "gsap"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 export default function FarmerPage({ onLogout }) {
   const [produce, setProduce] = useState(initialProduce)
   const [reports, setReports] = useState([])
+  const [activeSection, setActiveSection] = useState("home")
+  const [showProfileModal, setShowProfileModal] = useState(false)  // Add ProfileModal state
+  const [isDarkMode, setIsDarkMode] = useState(false)  // Add dark mode state
   const sectionsRef = useRef({})
   const navigate = useNavigate()
 
-  // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem('user') || '{}')
 
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger)
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      const headerOffset = 80
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset
 
-    // Section reveal animations
-    const sections = document.querySelectorAll("[data-section]")
-    sections.forEach((sec) => {
-      gsap.fromTo(
-        sec,
-        { opacity: 0, y: 24 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "power2.out",
-          scrollTrigger: { trigger: sec, start: "top 80%" },
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      })
+      
+      setActiveSection(sectionId)
+    }
+  }
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['home', 'produce', 'market', 'queries', 'reports']
+      const scrollPosition = window.scrollY + 80
+      const scrollHeight = document.documentElement.scrollHeight
+      const viewportHeight = window.innerHeight
+
+      if ((window.pageYOffset + viewportHeight) >= (scrollHeight - 50)) {
+        setActiveSection('reports')
+        return
+      }
+
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sections[i])
+        if (section) {
+          const sectionTop = section.offsetTop
+          const sectionBottom = sectionTop + section.offsetHeight
+          if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+            setActiveSection(sections[i])
+            break
+          }
         }
-      )
-    })
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    handleScroll()
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
   }, [])
 
-  // Handle logout functionality
   const handleLogout = () => {
     if (onLogout) {
       onLogout()
     }
-    navigate("/auth")
+    navigate("/")
   }
 
-  // Derived pricing data for market insights (mock "real-time")
   const marketData = useMemo(() => {
     const now = Date.now()
     return produce.map((p) => {
-      const fluctuation = ((now / 60000 + p.name.length) % 7) - 3 // -3..+3
+      const fluctuation = ((now / 60000 + p.name.length) % 7) - 3
       const consumerPrice = Math.max(0, p.basePrice + fluctuation)
       return { id: p.id, name: p.name, consumerPrice, locality: p.locality }
     })
   }, [produce])
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <Navbar
-        userData={userData}
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50">
+      <Navbar 
+        activeSection={activeSection}
+        scrollToSection={scrollToSection}
         onLogout={handleLogout}
-        onNavigate={(id) => {
-          const el = sectionsRef.current[id]
-          if (el) {
-            // smooth scroll handled inside Navbar via GSAP, but keep fallback
-            el.scrollIntoView({ behavior: "smooth", block: "start" })
-          }
-        }}
+        showProfileModal={showProfileModal}          
+        setShowProfileModal={setShowProfileModal}    
       />
+      
+      <main className="pt-20">
+        {/* All sections remain the same */}
+        <section id="home" className="relative">
+          <HomeHero />
+        </section>
 
-      <section id="home" ref={(el) => (sectionsRef.current["home"] = el)} data-section className="relative">
-        <HomeHero userData={userData} />
-      </section>
+        <section id="produce" className="px-4 md:px-8 lg:px-12 py-12 md:py-16 bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50">
+          <ProduceSection
+            produce={produce}
+            onAdd={(item) => setProduce((prev) => [...prev, item])}
+            onUpdate={(next) => setProduce((prev) => prev.map((p) => (p.id === next.id ? next : p)))}
+            onDelete={(id) => setProduce((prev) => prev.filter((p) => p.id !== id))}
+          />
+        </section>
 
-      <section
-        id="produce"
-        ref={(el) => (sectionsRef.current["produce"] = el)}
-        data-section
-        className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
-      >
-        <ProduceSection
-          produce={produce}
-          onAdd={(item) => setProduce((prev) => [...prev, item])}
-          onUpdate={(next) => setProduce((prev) => prev.map((p) => (p.id === next.id ? next : p)))}
-          onDelete={(id) => setProduce((prev) => prev.filter((p) => p.id !== id))}
-        />
-      </section>
+        <section id="market" className="px-4 md:px-8 lg:px-12 py-12 md:py-16 bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50">
+          <MarketSection produce={produce} marketData={marketData} />
+        </section>
 
-      <section
-        id="reports"
-        ref={(el) => (sectionsRef.current["reports"] = el)}
-        data-section
-        className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
-      >
-        <ReportsSection 
-          produce={produce} 
-          reports={reports} 
-          onAddReport={(r) => setReports((prev) => [r, ...prev])} 
-        />
-      </section>
+        <section id="queries" className="px-4 md:px-8 lg:px-12 py-12 md:py-16 bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50 bg-white">
+          <QnASection />
+        </section>
 
-      <section
-        id="market"
-        ref={(el) => (sectionsRef.current["market"] = el)}
-        data-section
-        className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
-      >
-        <MarketSection produce={produce} marketData={marketData} />
-      </section>
+        <section id="reports" className="px-4 md:px-8 lg:px-12 py-12 md:py-16 bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50">
+          <ReportsSection
+            produce={produce}
+            reports={reports}
+            onAddReport={(r) => setReports((prev) => [r, ...prev])}
+          />
+        </section>
+      </main>
 
-      <section
-        id="queries"
-        ref={(el) => (sectionsRef.current["queries"] = el)}
-        data-section
-        className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
-      >
-        <QnASection />
-      </section>
+      <Footer />
 
-      <section
-        id="account"
-        ref={(el) => (sectionsRef.current["account"] = el)}
-        data-section
-        className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
-      >
-        <AccountSection 
-          reports={reports} 
-          userData={userData}
-          onLogout={handleLogout}
-        />
-      </section>
-    </main>
+      {/* Add ProfileModal component */}
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
+      />
+    </div>
   )
 }

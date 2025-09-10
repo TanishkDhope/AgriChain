@@ -43,7 +43,7 @@ export default function Farmers() {
   return (
     <section 
       id="farmers" 
-      className="py-16 px-6 bg-gray-50" 
+      className="py-16 px-6 bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50" 
       style={{ scrollMarginTop: '30px' }}
     >
       <div className="max-w-7xl mx-auto">
