@@ -6,11 +6,14 @@ import { Input } from "../../../components/ui/input"
 import { Label } from "../../../components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { Textarea } from "../../../components/ui/textarea"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../../components/ui/dialog"
 import { exportElementToPDF } from "../../lib/pdf"
 
 export default function ReportsSection({ produce: produceList, reports, onAddReport }) {
   const formRef = useRef(null)
   const reportRef = useRef(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState(null)
 
   const submitReport = (e) => {
     e.preventDefault()
@@ -20,10 +23,23 @@ export default function ReportsSection({ produce: produceList, reports, onAddRep
       party: fd.get("party") || "",
       reason: fd.get("reason") || "",
       details: fd.get("details") || "",
+      uploadedFile: uploadedFile,
       createdAt: new Date().toISOString(),
     }
     onAddReport(entry)
     formRef.current?.reset()
+    setUploadedFile(null)
+    setIsDialogOpen(false)
+  }
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (file && (file.type.includes('image') || file.type === 'application/pdf')) {
+      setUploadedFile(file)
+    } else {
+      alert('Please upload only image files or PDF documents')
+      e.target.value = ''
+    }
   }
 
   const items = produceList ?? []
@@ -93,19 +109,27 @@ export default function ReportsSection({ produce: produceList, reports, onAddRep
 
   return (
     <div>
-      <h2 className="text-2xl font-bold">Reports & Transparency</h2>
-      <p className="text-muted-foreground">Log issues with partners and review an interactive price journey.</p>
-
-      <div className="mt-4 grid lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-1 bg-background/60 backdrop-blur">
-          <CardHeader>
-            <CardTitle>Report a Distributor/Retailer</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form ref={formRef} onSubmit={submitReport} className="grid gap-3">
-              <Labeled label="Party">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-2xl font-bold">Reports & Transparency</h2>
+          <p className="text-muted-foreground">Log issues with partners and review an interactive price journey.</p>
+        </div>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-emerald-600 hover:bg-emerald-700">
+              Report Distributor
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Report a Distributor/Retailer</DialogTitle>
+            </DialogHeader>
+            <form ref={formRef} onSubmit={submitReport} className="grid gap-4">
+              <Labeled label="Distributor/Retailer Name">
                 <Input name="party" placeholder="ABC Distributors" required />
               </Labeled>
+              
               <Labeled label="Reason">
                 <Select name="reason" required>
                   <SelectTrigger>
@@ -115,20 +139,60 @@ export default function ReportsSection({ produce: produceList, reports, onAddRep
                     <SelectItem value="unfair-pricing">Unfair Pricing</SelectItem>
                     <SelectItem value="delayed-payments">Delayed Payments</SelectItem>
                     <SelectItem value="fraudulent-activities">Fraudulent Activities</SelectItem>
+                    <SelectItem value="quality-issues">Quality Issues</SelectItem>
+                    <SelectItem value="contract-violation">Contract Violation</SelectItem>
                   </SelectContent>
                 </Select>
               </Labeled>
-              <Labeled label="Details">
-                <Textarea name="details" placeholder="Describe the issue..." />
+              
+              <Labeled label="Description">
+                <Textarea 
+                  name="details" 
+                  placeholder="Describe the issue in detail..." 
+                  rows={4}
+                  required 
+                />
               </Labeled>
-              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
-                Submit Report
-              </Button>
+              
+              <Labeled label="Upload Evidence (Image or PDF)">
+                <div className="space-y-2">
+                  <Input 
+                    type="file" 
+                    accept="image/*,application/pdf"
+                    onChange={handleFileUpload}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                  {uploadedFile && (
+                    <p className="text-sm text-muted-foreground">
+                      Selected: {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(1)} KB)
+                    </p>
+                  )}
+                </div>
+              </Labeled>
+              
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Submit Report
+                </Button>
+              </div>
             </form>
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-        <Card ref={reportRef} className="lg:col-span-2 bg-background/60 backdrop-blur">
+      <div className="mt-4">
+        <Card ref={reportRef} className="bg-background/60 backdrop-blur">
           <CardHeader>
             <CardTitle>
               Price Journey {selectedProduce ? `for ${selectedProduce}` : ""} (Farmer → Distributor → Retailer →
@@ -235,6 +299,11 @@ export default function ReportsSection({ produce: produceList, reports, onAddRep
                     <div className="text-sm">
                       <span className="font-medium">Details:</span> {r.details || "—"}
                     </div>
+                    {r.uploadedFile && (
+                      <div className="text-sm">
+                        <span className="font-medium">Evidence:</span> {r.uploadedFile.name}
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground mt-1">{new Date(r.createdAt).toLocaleString()}</div>
                   </li>
                 ))}
@@ -264,6 +333,10 @@ function prettyReason(v) {
       return "Delayed Payments"
     case "fraudulent-activities":
       return "Fraudulent Activities"
+    case "quality-issues":
+      return "Quality Issues"
+    case "contract-violation":
+      return "Contract Violation"
     default:
       return v
   }

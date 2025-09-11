@@ -6,7 +6,8 @@ import ProduceSection from "../components/sections/produce-section"
 import MarketSection from "../components/sections/market-section"
 import QnASection from "../components/sections/qna-section"
 import ReportsSection from "../components/sections/reports-section"
-import AccountSection from "../components/sections/account-section"
+// import AccountSection from "../components/sections/account-section"
+import MapSection from "../components/sections/map-section"
 import { initialProduce } from "../lib/data"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -113,15 +114,24 @@ export default function FarmerPage({ onLogout }) {
       </section>
 
       <section
-        id="queries"
-        ref={(el) => (sectionsRef.current["queries"] = el)}
+        id="map"
+        ref={(el) => (sectionsRef.current["map"] = el)}
         data-section
         className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
       >
-        <QnASection />
+        <MapSection produce={produce} />
       </section>
 
       <section
+        id="map"
+        ref={(el) => (sectionsRef.current["map"] = el)}
+        data-section
+        className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
+      >
+        <MapSection produce={produce} />
+      </section>
+
+      {/* <section
         id="account"
         ref={(el) => (sectionsRef.current["account"] = el)}
         data-section
@@ -132,7 +142,7 @@ export default function FarmerPage({ onLogout }) {
           userData={userData}
           onLogout={handleLogout}
         />
-      </section>
+      </section> */}
     </main>
   )
 }

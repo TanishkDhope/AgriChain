@@ -43,7 +43,7 @@ export default function Navbar({ onNavigate }) {
         </div>
 
         <nav className="hidden md:flex items-center gap-6">
-          {["home", "produce", "market", "queries", "reports", "account"].map(
+          {["home", "produce", "market", "queries", "reports", "map"].map(
             (id) => (
               <button
                 key={id}
@@ -79,8 +79,8 @@ function label(id) {
       return "Queries"
     case "reports":
       return "Reports"
-    case "account":
-      return "Account"
+    case "map":
+      return "Map"
     default:
       return id
   }
