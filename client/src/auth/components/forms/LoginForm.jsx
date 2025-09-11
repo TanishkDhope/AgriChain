@@ -8,7 +8,6 @@ import { formatPhone, formatAadhaar } from "../../lib/helpers";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../../../firebase.js"; // adjust path if needed
-import { validatePhone, validateAadhaar } from "../../lib/validators";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import ErrorBoundary from "../ui/ErrorBoundary";
 
