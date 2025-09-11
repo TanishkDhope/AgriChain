@@ -3,16 +3,21 @@ import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { Download, Search, Check } from "lucide-react"
+import { Download, Search, Check, Flag } from "lucide-react"
 import { transactions } from "../lib/data"
+import ReportIssuePopup from "./ReportIssuePopup"
 
 export default function Transactions() {
   const [filteredTransactions, setFilteredTransactions] = useState(transactions)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [copiedHash, setCopiedHash] = useState("")
+  
+  // Simple report state
+  const [isReportPopupOpen, setIsReportPopupOpen] = useState(false)
+  const [selectedTransaction, setSelectedTransaction] = useState(null)
 
-  // Filter transactions based on search and status
+  // Filter transactions
   const filterTransactions = (term, status) => {
     let filtered = transactions.filter(transaction => {
       const matchesSearch = transaction.farmer.toLowerCase().includes(term.toLowerCase()) ||
@@ -35,32 +40,22 @@ export default function Transactions() {
     filterTransactions(searchTerm, status)
   }
 
-  // Working copy to clipboard function
+  // Simple report handler
+  const handleReportClick = (transaction) => {
+    setSelectedTransaction(transaction)
+    setIsReportPopupOpen(true)
+  }
+
   const copyToClipboard = async (hash) => {
     try {
       await navigator.clipboard.writeText(hash)
       setCopiedHash(hash)
-      // Reset after 2 seconds
       setTimeout(() => setCopiedHash(""), 2000)
     } catch (err) {
-      // Fallback for older browsers
-      const textArea = document.createElement("textarea")
-      textArea.value = hash
-      document.body.appendChild(textArea)
-      textArea.focus()
-      textArea.select()
-      try {
-        document.execCommand('copy')
-        setCopiedHash(hash)
-        setTimeout(() => setCopiedHash(""), 2000)
-      } catch (err) {
-        console.error('Failed to copy: ', err)
-      }
-      document.body.removeChild(textArea)
+      console.error('Failed to copy: ', err)
     }
   }
 
-  // Export to CSV
   const exportToCSV = () => {
     const csvContent = [
       ["Transaction ID", "Farmer", "Lot ID", "Date", "Amount", "Status", "Hash"],
@@ -73,12 +68,20 @@ export default function Transactions() {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `transactions_${new Date().toISOString().split('T')}.csv`
     a.click()
     window.URL.revokeObjectURL(url)
   }
 
-  // Enhanced status styling
+  const handleReportSubmit = (reportData) => {
+    console.log('Issue reported:', {
+      transactionId: selectedTransaction?.id,
+      ...reportData
+    })
+    alert('Report submitted!')
+    setSelectedTransaction(null)
+  }
+
   const getStatusStyle = (status) => {
     switch (status) {
       case "Confirmed":
@@ -191,8 +194,9 @@ export default function Transactions() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Date</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Amount</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Transaction Hash</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Action</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Hash</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Copy</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Report</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -224,6 +228,8 @@ export default function Transactions() {
                             {transaction.hash}
                           </code>
                         </td>
+                        
+                        {/* Copy Column */}
                         <td className="px-6 py-4">
                           <Button
                             variant="ghost"
@@ -236,18 +242,30 @@ export default function Transactions() {
                             {copiedHash === transaction.hash ? (
                               <>
                                 <Check className="w-4 h-4 mr-1" />
-                                Copied!
+                                Copied
                               </>
                             ) : (
-                              'Copy Hash'
+                              'Copy'
                             )}
+                          </Button>
+                        </td>
+                        
+                        {/* Report Column - Simple & Clean */}
+                        <td className="px-6 py-4 text-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReportClick(transaction)}
+                            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 transition-all"
+                          >
+                            <Flag className="w-4 h-4" />
                           </Button>
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center">
+                      <td colSpan={8} className="px-6 py-12 text-center">
                         <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
                         <p className="text-gray-500">Try adjusting your search or filters</p>
@@ -259,6 +277,13 @@ export default function Transactions() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Simple Report Popup */}
+        <ReportIssuePopup
+          isOpen={isReportPopupOpen}
+          onClose={() => setIsReportPopupOpen(false)}
+          onSubmit={handleReportSubmit}
+        />
       </div>
     </section>
   )
