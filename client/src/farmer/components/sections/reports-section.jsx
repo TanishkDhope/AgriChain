@@ -1,43 +1,15 @@
 import { useMemo, useRef, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input"
-import { Label } from "../ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { Textarea } from "../ui/textarea"
-import { Badge } from "../ui/badge"
-import { FileText, Download, TrendingUp, BarChart3, AlertCircle } from "lucide-react"
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  ArcElement,
-} from 'chart.js'
-import { Bar, Line, Doughnut } from 'react-chartjs-2'
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  ArcElement
-)
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import MarginBreakdownChart from "../charts/margin-breakdown-chart"
+import { Button } from "../../../components/ui/button"
+import { Input } from "../../../components/ui/input"
+import { Label } from "../../../components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
+import { Textarea } from "../../../components/ui/textarea"
+import { exportElementToPDF } from "../../lib/pdf"
 
 export default function ReportsSection({ produce: produceList, reports, onAddReport }) {
-  const [showIssueForm, setShowIssueForm] = useState(false)
+  const formRef = useRef(null)
   const reportRef = useRef(null)
 
   const submitReport = (e) => {
@@ -51,378 +23,257 @@ export default function ReportsSection({ produce: produceList, reports, onAddRep
       createdAt: new Date().toISOString(),
     }
     onAddReport(entry)
-    e.target.reset()
-    setShowIssueForm(false)
+    formRef.current?.reset()
   }
 
-  // Revenue Trend Chart Data - Colorful like retailer
-  const revenueData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Revenue',
-        data: [45000, 52000, 48000, 61000, 55000, 67000],
-        borderColor: '#3B82F6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.3,
-        pointRadius: 4,
-        pointBackgroundColor: '#3B82F6',
-      },
-      {
-        label: 'Profit',
-        data: [15000, 18000, 16000, 22000, 19000, 24000],
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.3,
-        pointRadius: 4,
-        pointBackgroundColor: '#10B981',
-      },
-    ],
+  const items = produceList ?? []
+  const produceNames = useMemo(() => Array.from(new Set(items.map((p) => p.name))), [items])
+  const [selectedProduce, setSelectedProduce] = useState(produceNames[0] ?? "Tomatoes")
+
+  const selectedItems = useMemo(() => items.filter((p) => p.name === selectedProduce), [items, selectedProduce])
+  const availableLocalities = useMemo(
+    () => Array.from(new Set(selectedItems.map((p) => p.locality))).sort(),
+    [selectedItems]
+  )
+  const [selectedLocs, setSelectedLocs] = useState("ALL")
+
+  function hashString(s) {
+    let h = 0
+    for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i)
+    return Math.abs(h)
   }
 
-  const revenueOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { 
-        display: true,
-        position: 'top',
-      },
-      tooltip: {
-        backgroundColor: '#374151',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: '#3B82F6',
-        borderWidth: 1,
-        cornerRadius: 6,
-        callbacks: {
-          label: (context) => `${context.dataset.label}: ₹${context.parsed.y.toLocaleString()}`,
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: { display: false },
-        border: { display: false },
-        ticks: { color: '#6B7280', font: { size: 11 } },
-      },
-      y: {
-        beginAtZero: true,
-        grid: { color: '#F3F4F6', drawBorder: false },
-        border: { display: false },
-        ticks: { 
-          color: '#6B7280', 
-          font: { size: 11 },
-          callback: (value) => `₹${(value / 1000)}k`,
-        },
-      },
-    },
+  function averageBasePrice(list) {
+    if (!list.length) return 0
+    return list.reduce((acc, p) => acc + p.basePrice, 0) / list.length
   }
 
-  // Produce Distribution Chart - Colorful pie
-  const produceDistributionData = {
-    labels: ['Vegetables', 'Fruits', 'Grains', 'Leafy Greens', 'Others'],
-    datasets: [
-      {
-        data: [45, 30, 15, 25, 18],
-        backgroundColor: [
-          '#22C55E',  // Green
-          '#FB923C',  // Orange
-          '#A855F7',  // Purple
-          '#3B82F6',  // Blue
-          '#EC4899',  // Pink
-        ],
-        borderWidth: 2,
-        borderColor: '#fff',
-      },
-    ],
-  }
+  const basePrice = useMemo(() => {
+    const pool = selectedLocs === "ALL" ? selectedItems : selectedItems.filter((p) => selectedLocs.includes(p.locality))
+    return Number(averageBasePrice(pool).toFixed(2))
+  }, [selectedItems, selectedLocs])
 
-  const produceDistributionOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          padding: 20,
-          usePointStyle: true,
-        }
-      },
-      tooltip: {
-        backgroundColor: '#374151',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        cornerRadius: 6,
-        callbacks: {
-          label: (context) => `${context.label}: ${context.parsed}%`,
-        },
-      },
-    },
-  }
+  const trendData = useMemo(() => {
+    const days = 8
+    const seed = hashString(selectedProduce)
+    const rows = Array.from({ length: days }).map((_, idx) => {
+      const i = days - idx - 1
+      const variance = ((seed + i) % 7) - 3 // -3..+3
+      const price = Math.max(0, basePrice + variance)
+      const cost = Number(Math.max(0, price * 0.7).toFixed(2))
+      const ts = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+      const date = `${String(ts.getMonth() + 1).padStart(2, "0")}-${String(ts.getDate()).padStart(2, "0")}`
+      return { date, price: Number(price.toFixed(2)), cost }
+    })
+    return rows
+  }, [basePrice, selectedProduce])
 
-  const handleExport = () => {
-    if (typeof window !== "undefined") {
-      window.print()
+  const localityComparison = useMemo(() => {
+    if (!availableLocalities.length) return []
+    return availableLocalities.map((loc) => {
+      const adj = ((hashString(loc) + hashString(selectedProduce)) % 5) - 2 // -2..+2
+      const price = Math.max(0, basePrice + adj)
+      return { locality: loc, price: Number(price.toFixed(2)) }
+    })
+  }, [availableLocalities, basePrice, selectedProduce])
+
+  const marginSummary = useMemo(() => {
+    if (!trendData.length) return { avgPrice: 0, avgCost: 0, margin: 0, marginPct: 0 }
+    const avgPrice = trendData.reduce((a, b) => a + b.price, 0) / trendData.length
+    const avgCost = trendData.reduce((a, b) => a + b.cost, 0) / trendData.length
+    const margin = avgPrice - avgCost
+    const marginPct = avgPrice ? (margin / avgPrice) * 100 : 0
+    return {
+      avgPrice: Number(avgPrice.toFixed(2)),
+      avgCost: Number(avgCost.toFixed(2)),
+      margin: Number(margin.toFixed(2)),
+      marginPct: Number(marginPct.toFixed(1)),
     }
-  }
+  }, [trendData])
 
   return (
-    <section 
-      id="reports" 
-      className="py-16 px-6 bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50" 
-      style={{ scrollMarginTop: '30px' }}
-    >
-      <div className="max-w-7xl mx-auto">
-        
-        {/* Header */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-6">
-            <div className="text-center flex-1">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">Analytics & Reports</h2>
-              <p className="text-gray-600">Comprehensive insights and issue tracking</p>
-            </div>
-          </div>
-          
-          <div className="flex justify-center gap-4">
-            <Button 
-              onClick={() => setShowIssueForm(!showIssueForm)}
-              variant="outline" 
-              className="h-12 text-base"
-            >
-              <AlertCircle className="h-4 w-4 mr-2" />
-              Report Issue
-            </Button>
-            <Button onClick={handleExport} className="h-12 text-base">
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
-          </div>
-        </div>
+    <div>
+      <h2 className="text-2xl font-bold">Reports & Transparency</h2>
+      <p className="text-muted-foreground">Log issues with partners and review an interactive price journey.</p>
 
-        {/* Issue Form */}
-        {showIssueForm && (
-          <Card className="border-0 shadow-sm mb-10">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5 text-red-600" />
-                <span>Report an Issue</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={submitReport} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="block text-sm font-semibold text-gray-700 mb-3">Party/Organization</Label>
-                    <Input
-                      name="party"
-                      placeholder="Enter organization name"
-                      className="h-12 border-gray-200"
-                    />
-                  </div>
-                  <div>
-                    <Label className="block text-sm font-semibold text-gray-700 mb-3">Issue Type</Label>
-                    <Select name="reason">
-                      <SelectTrigger className="h-12 border-gray-200">
-                        <SelectValue placeholder="Select issue type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="payment">Payment Delay</SelectItem>
-                        <SelectItem value="quality">Quality Issues</SelectItem>
-                        <SelectItem value="delivery">Delivery Problems</SelectItem>
-                        <SelectItem value="contract">Contract Violation</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div>
-                  <Label className="block text-sm font-semibold text-gray-700 mb-3">Issue Details</Label>
-                  <Textarea
-                    name="details"
-                    placeholder="Describe the issue in detail..."
-                    className="border-gray-200"
-                    rows={4}
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <Button type="submit" className="h-12 text-base">
-                    Submit Report
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowIssueForm(false)} className="h-12 text-base">
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Summary Cards - Same as retailer */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-green-50">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
-                </div>
-                <div className="flex items-center space-x-1 text-sm font-medium text-green-600">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>+12%</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">₹2,45,000</p>
-                <p className="text-sm text-gray-600">Total Revenue</p>
-                <p className="text-xs text-gray-500 mt-1">from last month</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-orange-50">
-                  <BarChart3 className="w-6 h-6 text-orange-600" />
-                </div>
-                <div className="flex items-center space-x-1 text-sm font-medium text-orange-600">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>+8%</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">₹1,85,000</p>
-                <p className="text-sm text-gray-600">Total Costs</p>
-                <p className="text-xs text-gray-500 mt-1">from last month</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-blue-50">
-                  <span className="text-2xl">💰</span>
-                </div>
-                <div className="flex items-center space-x-1 text-sm font-medium text-blue-600">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>+18%</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">₹60,000</p>
-                <p className="text-sm text-gray-600">Net Profit</p>
-                <p className="text-xs text-gray-500 mt-1">from last month</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-purple-50">
-                  <span className="text-2xl">📊</span>
-                </div>
-                <div className="flex items-center space-x-1 text-sm font-medium text-purple-600">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>+3.2%</span>
-                </div>
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-gray-900 mb-1">24.5%</p>
-                <p className="text-sm text-gray-600">Profit Margin</p>
-                <p className="text-xs text-gray-500 mt-1">improvement</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts Section - Same layout as retailer */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-          
-          {/* Revenue Trend Chart */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold">Revenue & Profit Trends</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">Monthly financial overview</p>
-                </div>
-                <div className="p-2 rounded-lg bg-blue-50">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <Line data={revenueData} options={revenueOptions} />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Produce Distribution Chart */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold">Produce Distribution</CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">Product category breakdown</p>
-                </div>
-                <div className="p-2 rounded-lg bg-green-50">
-                  <BarChart3 className="w-5 h-5 text-green-600" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <Doughnut data={produceDistributionData} options={produceDistributionOptions} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Issue Reports */}
-        <Card className="border-0 shadow-sm">
+      <div className="mt-4 grid lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-1 bg-background/60 backdrop-blur">
           <CardHeader>
-            <CardTitle>Recent Issue Reports</CardTitle>
-            <p className="text-sm text-gray-600 mt-1">Latest support tickets and complaints</p>
+            <CardTitle>Report a Distributor/Retailer</CardTitle>
           </CardHeader>
           <CardContent>
-            {reports.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>No reports submitted yet</p>
+            <form ref={formRef} onSubmit={submitReport} className="grid gap-3">
+              <Labeled label="Party">
+                <Input name="party" placeholder="ABC Distributors" required />
+              </Labeled>
+              <Labeled label="Reason">
+                <Select name="reason" required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select reason" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unfair-pricing">Unfair Pricing</SelectItem>
+                    <SelectItem value="delayed-payments">Delayed Payments</SelectItem>
+                    <SelectItem value="fraudulent-activities">Fraudulent Activities</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Labeled>
+              <Labeled label="Details">
+                <Textarea name="details" placeholder="Describe the issue..." />
+              </Labeled>
+              <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+                Submit Report
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card ref={reportRef} className="lg:col-span-2 bg-background/60 backdrop-blur">
+          <CardHeader>
+            <CardTitle>
+              Price Journey {selectedProduce ? `for ${selectedProduce}` : ""} (Farmer → Distributor → Retailer →
+              Consumer)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="produce-select" className="text-sm">
+                  Produce
+                </Label>
+                <Select
+                  value={selectedProduce}
+                  onValueChange={(v) => {
+                    setSelectedProduce(v)
+                    setSelectedLocs("ALL")
+                  }}
+                >
+                  <SelectTrigger id="produce-select" className="w-48">
+                    <SelectValue placeholder="Select produce" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {produceNames.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {reports.map((report) => (
-                  <div key={report.id} className="flex items-start space-x-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <div className="flex-shrink-0 mt-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-semibold text-gray-900">{report.party}</h4>
-                        <Badge variant="secondary" className="text-xs">
-                          {report.reason}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-2">{report.details}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(report.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
+
+              {availableLocalities.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Localities:</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant={selectedLocs === "ALL" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedLocs("ALL")}
+                      aria-pressed={selectedLocs === "ALL"}
+                    >
+                      All
+                    </Button>
+                    {availableLocalities.map((loc) => {
+                      const active = selectedLocs !== "ALL" && selectedLocs.includes(loc)
+                      return (
+                        <Button
+                          key={loc}
+                          type="button"
+                          variant={active ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => {
+                            setSelectedLocs((prev) => {
+                              if (prev === "ALL") return [loc]
+                              const s = new Set(prev)
+                              if (s.has(loc)) s.delete(loc)
+                              else s.add(loc)
+                              const arr = Array.from(s)
+                              return arr.length ? arr : "ALL"
+                            })
+                          }}
+                          aria-pressed={active}
+                        >
+                          {loc}
+                        </Button>
+                      )
+                    })}
                   </div>
+                </div>
+              )}
+            </div>
+
+            <MarginBreakdownChart />
+
+            <div className="mt-2">
+              <Button variant="outline" onClick={() => exportElementToPDF(reportRef.current, "price-journey.pdf")}>
+                Download Report as PDF
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-4">
+        <Card className="bg-background/60 backdrop-blur">
+          <CardHeader>
+            <CardTitle>My Report History</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {reports.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No reports yet.</p>
+            ) : (
+              <ul className="grid gap-2">
+                {reports.map((r) => (
+                  <li key={r.id} className="border rounded-md p-3">
+                    <div className="text-sm">
+                      <span className="font-medium">Party:</span> {r.party}
+                    </div>
+                    <div className="text-sm">
+                      <span className="font-medium">Reason:</span> {prettyReason(r.reason)}
+                    </div>
+                    <div className="text-sm">
+                      <span className="font-medium">Details:</span> {r.details || "—"}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">{new Date(r.createdAt).toLocaleString()}</div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </CardContent>
         </Card>
       </div>
-    </section>
+    </div>
+  )
+}
+
+function Labeled({ label, children }) {
+  return (
+    <div className="grid gap-1.5">
+      <Label className="text-sm">{label}</Label>
+      {children}
+    </div>
+  )
+}
+
+function prettyReason(v) {
+  switch (v) {
+    case "unfair-pricing":
+      return "Unfair Pricing"
+    case "delayed-payments":
+      return "Delayed Payments"
+    case "fraudulent-activities":
+      return "Fraudulent Activities"
+    default:
+      return v
+  }
+}
+
+function Metric({ label, value }) {
+  return (
+    <div className="rounded-md border bg-card p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 text-lg font-medium">{value}</div>
+    </div>
   )
 }
