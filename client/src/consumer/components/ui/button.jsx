@@ -1,32 +1,33 @@
-import React from 'react';
+import React from "react";
 
 export const Button = ({ 
   children, 
-  variant = 'default', 
-  size = 'default', 
-  className = '', 
-  onClick,
+  onClick, 
+  variant = "default", 
+  size = "default", 
+  className = "", 
+  disabled = false,
   ...props 
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95 shadow-lg';
+  const baseClasses = "inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
-    default: 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-green-200',
-    ghost: 'hover:bg-green-100 hover:text-green-800 shadow-none',
-    outline: 'border-2 border-green-300 hover:bg-green-50 hover:text-green-800 hover:border-green-400 bg-white/80'
+    default: "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500",
+    outline: "border-2 border-green-600 text-green-600 hover:bg-green-50 focus:ring-green-500",
+    ghost: "text-gray-600 hover:bg-gray-100 focus:ring-gray-500"
   };
   
   const sizes = {
-    default: 'h-11 px-6 py-3 text-sm',
-    sm: 'h-9 rounded-lg px-4 text-sm',
-    lg: 'h-14 rounded-xl px-8 text-base font-bold',
-    icon: 'h-11 w-11'
+    sm: "px-3 py-2 text-sm",
+    default: "px-4 py-2 text-base",
+    lg: "px-6 py-3 text-lg"
   };
-  
+
   return (
     <button
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
       onClick={onClick}
+      disabled={disabled}
+      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}

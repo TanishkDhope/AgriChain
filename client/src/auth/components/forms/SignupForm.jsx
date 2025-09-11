@@ -1,14 +1,5 @@
 import { useState } from "react";
-import {
-  validatePhone,
-  validateEmail,
-  validateAadhaar,
-  validatePassword,
-} from "../../lib/validators";
-import { formatPhone, formatAadhaar } from "../../lib/helpers";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { auth, db } from "../../../../firebase.js"; // adjust path if needed
+import { validatePhone, validateEmail, validateAadhaar } from "../../lib/validators";
 
 export default function SignupForm({ onSuccess }) {
   const [form, setForm] = useState({
@@ -17,139 +8,103 @@ export default function SignupForm({ onSuccess }) {
     email: "",
     aadhaar: "",
     password: "",
-    confirmPassword: "",
     termsAccepted: false,
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiError, setApiError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (field, value) => {
-    const formattedValue =
-      field === "phone"
-        ? formatPhone(value)
-        : field === "aadhaar"
-        ? formatAadhaar(value)
-        : value;
+    const formattedValue = field === "phone" 
+      ? value.replace(/\D/g, "").slice(0, 10)
+      : field === "aadhaar" 
+      ? value.replace(/\D/g, "").slice(0, 12)
+      : value;
 
-    setForm((prev) => ({ ...prev, [field]: formattedValue }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
-    if (apiError) setApiError("");
+    setForm(prev => ({ ...prev, [field]: formattedValue }));
+    
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }
   };
 
   const validate = () => {
-    const errs = {};
+    const newErrors = {};
 
-    if (!form.fullName.trim()) errs.fullName = "Full name is required";
-    else if (form.fullName.trim().length < 2)
-      errs.fullName = "Full name must be at least 2 characters";
+    if (!form.fullName.trim()) {
+      newErrors.fullName = "Full name is required";
+    }
 
-    if (!form.phone) errs.phone = "Phone number is required";
-    else if (!validatePhone(form.phone))
-      errs.phone = "Please enter a valid Indian mobile number";
+    if (!form.phone) {
+      newErrors.phone = "Phone number is required";
+    } else if (!validatePhone(form.phone)) {
+      newErrors.phone = "Invalid phone number";
+    }
 
-    if (!form.email) errs.email = "Email is required";
-    else if (!validateEmail(form.email))
-      errs.email = "Please enter a valid email address";
+    if (!form.email) {
+      newErrors.email = "Email is required";
+    } else if (!validateEmail(form.email)) {
+      newErrors.email = "Invalid email address";
+    }
 
-    if (!form.aadhaar) errs.aadhaar = "Aadhaar number is required";
-    else if (!validateAadhaar(form.aadhaar))
-      errs.aadhaar = "Please enter a valid Aadhaar number";
+    if (!form.aadhaar) {
+      newErrors.aadhaar = "Aadhaar number is required";
+    } else if (!validateAadhaar(form.aadhaar)) {
+      newErrors.aadhaar = "Invalid Aadhaar number";
+    }
 
-    const { isValid, errors: pwdErrors } = validatePassword(form.password);
-    if (!isValid) errs.password = Object.values(pwdErrors).find(Boolean);
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else if (form.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
 
-    if (form.password !== form.confirmPassword)
-      errs.confirmPassword = "Passwords do not match";
+    if (!form.termsAccepted) {
+      newErrors.termsAccepted = "Please accept the terms";
+    }
 
-    if (!form.termsAccepted)
-      errs.termsAccepted = "You must accept the Terms & Conditions";
-
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
 const handleSubmit = async (e) => {
   e.preventDefault();
   if (!validate()) return;
 
-  setIsSubmitting(true);
-  setApiError("");
+    setIsSubmitting(true);
 
-  try {
-    // 1. Create user in Firebase Authentication
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      form.email,
-      form.password
-    );
-
-    const user = userCredential.user;
-
-    // 2. Update display name in Firebase Auth
-    await updateProfile(user, {
-      displayName: form.fullName,
-    });
-
-    // 3. Save user profile to Firestore
-    await setDoc(doc(db, "users", user.uid), {
-      uid: user.uid,
-      fullName: form.fullName,
-      phone: form.phone,
-      email: form.email,
-      aadhaar: form.aadhaar,
-      createdAt: new Date().toISOString(),
-    });
-
-    // 4. Trigger onSuccess callback (e.g., redirect or show success)
-    onSuccess(user);
-
-  } catch (error) {
-    console.error("Firebase signup error:", error);
-    setApiError(error.message || "Registration failed. Please try again.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-  const getPasswordStrength = (password) => {
-    const { errors: pwdErrors } = validatePassword(password);
-    const passedChecks = Object.values(pwdErrors).filter((err) => !err).length;
-
-    if (passedChecks < 2)
-      return { label: "Weak", color: "text-red-500", width: "w-1/4" };
-    if (passedChecks < 4)
-      return { label: "Fair", color: "text-yellow-500", width: "w-2/4" };
-    if (passedChecks < 5)
-      return { label: "Good", color: "text-blue-500", width: "w-3/4" };
-    return { label: "Strong", color: "text-green-500", width: "w-full" };
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      onSuccess({
+        fullName: form.fullName.trim(),
+        phone: form.phone,
+        email: form.email,
+        aadhaar: form.aadhaar,
+        signupTime: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Signup failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const passwordStrength = getPasswordStrength(form.password);
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {apiError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600 flex items-center gap-2">⚠️ {apiError}</p>
-        </div>
-      )}
-
+    <form onSubmit={handleSubmit} className="space-y-4">
+      
       {/* Full Name */}
       <div>
-        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Full Name *
         </label>
         <input
-          id="fullName"
           type="text"
           placeholder="Enter your full name"
           value={form.fullName}
           onChange={(e) => handleChange("fullName", e.target.value)}
-          className={`w-full border rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 ${
-            errors.fullName ? "border-red-300 bg-red-50" : "border-gray-300"
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+            errors.fullName ? "border-red-300" : "border-gray-300"
           }`}
           disabled={isSubmitting}
         />
@@ -158,17 +113,16 @@ const handleSubmit = async (e) => {
 
       {/* Phone */}
       <div>
-        <label htmlFor="signup-phone" className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Phone Number *
         </label>
         <input
-          id="signup-phone"
           type="tel"
-          placeholder="Enter 10-digit phone number"
+          placeholder="Enter 10-digit number"
           value={form.phone}
           onChange={(e) => handleChange("phone", e.target.value)}
-          className={`w-full border rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 ${
-            errors.phone ? "border-red-300 bg-red-50" : "border-gray-300"
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+            errors.phone ? "border-red-300" : "border-gray-300"
           }`}
           disabled={isSubmitting}
         />
@@ -177,17 +131,16 @@ const handleSubmit = async (e) => {
 
       {/* Email */}
       <div>
-        <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Email Address *
         </label>
         <input
-          id="signup-email"
           type="email"
-          placeholder="Enter your email address"
+          placeholder="Enter your email"
           value={form.email}
           onChange={(e) => handleChange("email", e.target.value)}
-          className={`w-full border rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 ${
-            errors.email ? "border-red-300 bg-red-50" : "border-gray-300"
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+            errors.email ? "border-red-300" : "border-gray-300"
           }`}
           disabled={isSubmitting}
         />
@@ -196,17 +149,16 @@ const handleSubmit = async (e) => {
 
       {/* Aadhaar */}
       <div>
-        <label htmlFor="signup-aadhaar" className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Aadhaar Number *
         </label>
         <input
-          id="signup-aadhaar"
           type="text"
-          placeholder="Enter 12-digit Aadhaar number"
+          placeholder="Enter 12-digit Aadhaar"
           value={form.aadhaar}
           onChange={(e) => handleChange("aadhaar", e.target.value)}
-          className={`w-full border rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 ${
-            errors.aadhaar ? "border-red-300 bg-red-50" : "border-gray-300"
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+            errors.aadhaar ? "border-red-300" : "border-gray-300"
           }`}
           disabled={isSubmitting}
         />
@@ -215,107 +167,34 @@ const handleSubmit = async (e) => {
 
       {/* Password */}
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Password *
         </label>
-        <div className="relative">
-          <input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Enter a strong password"
-            value={form.password}
-            onChange={(e) => handleChange("password", e.target.value)}
-            className={`w-full border rounded-lg px-3 py-2.5 pr-10 focus:ring-2 focus:ring-green-500 ${
-              errors.password ? "border-red-300 bg-red-50" : "border-gray-300"
-            }`}
-            disabled={isSubmitting}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-          >
-            {showPassword ? "🙈" : "👁️"}
-          </button>
-        </div>
-
-        {form.password && (
-          <div className="mt-2">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-xs text-gray-500">Password strength:</span>
-              <span className={`text-xs font-medium ${passwordStrength.color}`}>
-                {passwordStrength.label}
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-1">
-              <div
-                className={`h-1 rounded-full transition-all duration-300 ${passwordStrength.width} ${
-                  passwordStrength.label === "Weak"
-                    ? "bg-red-500"
-                    : passwordStrength.label === "Fair"
-                    ? "bg-yellow-500"
-                    : passwordStrength.label === "Good"
-                    ? "bg-blue-500"
-                    : "bg-green-500"
-                }`}
-              />
-            </div>
-          </div>
-        )}
-
+        <input
+          type="password"
+          placeholder="Enter password (min 6 characters)"
+          value={form.password}
+          onChange={(e) => handleChange("password", e.target.value)}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+            errors.password ? "border-red-300" : "border-gray-300"
+          }`}
+          disabled={isSubmitting}
+        />
         {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
-      </div>
-
-      {/* Confirm Password */}
-      <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-          Confirm Password *
-        </label>
-        <div className="relative">
-          <input
-            id="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm your password"
-            value={form.confirmPassword}
-            onChange={(e) => handleChange("confirmPassword", e.target.value)}
-            className={`w-full border rounded-lg px-3 py-2.5 pr-10 focus:ring-2 focus:ring-green-500 ${
-              errors.confirmPassword ? "border-red-300 bg-red-50" : "border-gray-300"
-            }`}
-            disabled={isSubmitting}
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-          >
-            {showConfirmPassword ? "🙈" : "👁️"}
-          </button>
-        </div>
-        {errors.confirmPassword && (
-          <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
-        )}
       </div>
 
       {/* Terms */}
       <div>
-        <label className="flex items-start gap-3 cursor-pointer">
+        <label className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={form.termsAccepted}
             onChange={(e) => handleChange("termsAccepted", e.target.checked)}
-            className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
             disabled={isSubmitting}
           />
           <span className="text-sm text-gray-700">
-            I agree to the{" "}
-            <a href="/terms" className="text-green-600 hover:text-green-700 underline">
-              Terms & Conditions
-            </a>{" "}
-            and{" "}
-            <a href="/privacy" className="text-green-600 hover:text-green-700 underline">
-              Privacy Policy
-            </a>{" "}
-            *
+            I agree to the Terms & Conditions *
           </span>
         </label>
         {errors.termsAccepted && <p className="text-sm text-red-500 mt-1">{errors.termsAccepted}</p>}
@@ -325,9 +204,7 @@ const handleSubmit = async (e) => {
       <button
         type="submit"
         disabled={isSubmitting}
-        className={`w-full py-3 rounded-lg font-medium transition-all duration-200 ${
-          isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
-        } text-white`}
+        className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
       >
         {isSubmitting ? (
           <span className="flex items-center justify-center gap-2">

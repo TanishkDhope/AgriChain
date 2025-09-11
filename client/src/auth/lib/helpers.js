@@ -1,3 +1,5 @@
+// helpers.js - Simple utility functions
+
 // Format phone number (remove non-digits, limit to 10)
 export const formatPhone = (phone) => {
   return phone.replace(/\D/g, "").slice(0, 10);

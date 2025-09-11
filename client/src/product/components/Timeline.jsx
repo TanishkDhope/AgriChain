@@ -1,135 +1,340 @@
-import React from "react"
+import React, { useState, useRef, useCallback } from "react";
+import { productData } from "../lib/data";
 
-const stepIcons = [
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>,
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>,
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-  </svg>,
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>,
-  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-]
+const InfoCard = ({ label, value, icon }) => (
+  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-green-300 transition-colors">
+    <span className="text-gray-700 text-sm font-medium flex items-center gap-2">
+      <span>{icon}</span>
+      {label}
+    </span>
+    <span className="text-gray-900 font-semibold text-xs bg-green-50 px-2 py-1 rounded border border-green-200">
+      {value}
+    </span>
+  </div>
+);
 
-export default function Timeline({ data, darkMode }) {
+const StepButton = ({ stepNumber, isActive, icon, title, onClick, isCompleted }) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center p-3 rounded-lg transition-all text-center min-w-20 ${
+      isActive
+        ? "bg-green-500 text-white shadow-lg scale-105"
+        : isCompleted
+        ? "bg-green-400 text-white shadow-md"
+        : "bg-white text-gray-600 hover:bg-green-50 border border-gray-200 shadow-sm"
+    }`}
+  >
+    <div className="text-xl mb-1">{icon}</div>
+    <div className="text-xs font-bold">Step {stepNumber}</div>
+    <div className="text-xs leading-tight">{title}</div>
+  </button>
+);
+
+const PriceChart = ({ data }) => {
+  const priceData = [
+    { step: "Farmer", price: 20, icon: "🌾" },
+    { step: "Distributor", price: 25, icon: "🚚" },
+    { step: "Market", price: 30, icon: "🏬" },
+    { step: "Retailer", price: 45, icon: "🏪" }
+  ];
+
+  const maxPrice = Math.max(...priceData.map(d => d.price));
+
   return (
-    <div className={`rounded-3xl shadow-2xl transition-all duration-300 overflow-hidden backdrop-blur-lg ${
-      darkMode 
-        ? 'bg-gradient-to-br from-slate-800/90 via-slate-700/80 to-slate-800/90 border border-slate-700/50' 
-        : 'bg-gradient-to-br from-white/90 via-blue-50/60 to-white/90 border border-blue-200/50'
-    }`}>
-      {/* Header */}
-      <div className={`px-8 py-8 border-b relative overflow-hidden ${
-        darkMode 
-          ? 'bg-gradient-to-r from-blue-900/80 via-blue-800/60 to-indigo-900/80 border-slate-700/50' 
-          : 'bg-gradient-to-r from-blue-100/90 via-indigo-100/70 to-blue-200/90 border-blue-200/50'
-      }`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-transparent to-indigo-500/20"></div>
-        <div className="flex items-center space-x-4 relative z-10">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-2xl flex items-center justify-center shadow-xl">
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className={`text-3xl font-bold ${darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
-              Supply Chain Journey
-            </h2>
-            <p className={`text-lg mt-1 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>
-              Track every step from farm to table
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-5 mt-8">
+      <h3 className="text-lg font-bold text-gray-800 mb-6 text-center">Price at Each Stage</h3>
       
-      {/* Timeline Content */}
-      <div className="p-10 relative">
-        <div className={`absolute inset-0 ${
-          darkMode 
-            ? 'bg-gradient-to-br from-slate-800/40 via-transparent to-blue-900/20' 
-            : 'bg-gradient-to-br from-blue-50/40 via-transparent to-white/60'
-        }`}></div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 relative z-10">
-          {data.map((step, index) => (
-            <div key={step.id} className="relative">
-              {/* Step Card */}
-              <div className={`rounded-3xl p-8 text-center transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 backdrop-blur-lg relative overflow-hidden ${
-                darkMode 
-                  ? 'bg-gradient-to-br from-slate-700/90 via-slate-600/80 to-slate-700/90 border border-slate-600/50' 
-                  : 'bg-gradient-to-br from-white/90 via-blue-50/60 to-white/90 border border-blue-200/50'
-              }`}>
-                {/* Background decoration */}
-                <div className={`absolute inset-0 ${
-                  darkMode 
-                    ? 'bg-gradient-to-br from-blue-900/30 via-transparent to-slate-800/30' 
-                    : 'bg-gradient-to-br from-blue-100/50 via-transparent to-white/50'
-                }`}></div>
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-blue-300/20 to-transparent rounded-3xl"></div>
-                
-                {/* Icon */}
-                <div className="relative mx-auto mb-6 z-10">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-3xl flex items-center justify-center shadow-xl">
-                    <div className="text-white">
-                      {stepIcons[index]}
-                    </div>
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-7 h-7 bg-white rounded-full border-2 border-blue-600 flex items-center justify-center shadow-lg">
-                    <span className="text-sm font-bold text-blue-600">{step.id}</span>
-                  </div>
-                </div>
-                
-                {/* Content */}
-                <h3 className={`font-bold text-xl mb-4 relative z-10 ${darkMode ? 'text-slate-200' : 'text-slate-900'}`}>
-                  {step.title}
-                </h3>
-                
-                <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-600 text-white mb-6 shadow-lg relative z-10">
-                  <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-                  completed
-                </div>
-                
-                <div className={`space-y-3 mb-6 relative z-10 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <div className="flex items-center justify-center text-sm">
-                    <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="font-semibold">{step.date}</span>
-                  </div>
-                  <div className="flex items-center justify-center text-sm">
-                    <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    </svg>
-                    <span className="font-semibold">{step.location}</span>
-                  </div>
-                </div>
-                
-                <p className={`text-sm leading-relaxed relative z-10 ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                  {step.desc}
-                </p>
+      {/* Chart */}
+      <div className="relative">
+        {/* Y-axis labels */}
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 -ml-8">
+          <span>₹{maxPrice}</span>
+          <span>₹{Math.round(maxPrice * 0.75)}</span>
+          <span>₹{Math.round(maxPrice * 0.5)}</span>
+          <span>₹{Math.round(maxPrice * 0.25)}</span>
+          <span>₹0</span>
+        </div>
+
+        {/* Chart area */}
+        <div className="ml-6 relative h-64 bg-gradient-to-t from-green-50 to-transparent rounded-lg border border-gray-200">
+          {/* Grid lines */}
+          <div className="absolute inset-0">
+            {[0.25, 0.5, 0.75].map((percentage, index) => (
+              <div
+                key={index}
+                className="absolute w-full border-t border-gray-200 border-dashed"
+                style={{ bottom: `${percentage * 100}%` }}
+              />
+            ))}
+          </div>
+
+          {/* Price points and connecting line */}
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            {/* Connecting line */}
+            <polyline
+              fill="none"
+              stroke="#059669"
+              strokeWidth="0.8"
+              points={priceData.map((d, i) => `${(i / (priceData.length - 1)) * 100},${100 - (d.price / maxPrice) * 100}`).join(' ')}
+            />
+            
+            {/* Price points */}
+            {priceData.map((d, i) => (
+              <circle
+                key={i}
+                cx={(i / (priceData.length - 1)) * 100}
+                cy={100 - (d.price / maxPrice) * 100}
+                r="1.5"
+                fill="#059669"
+                stroke="#ffffff"
+                strokeWidth="0.5"
+              />
+            ))}
+          </svg>
+
+          {/* Price labels */}
+          {priceData.map((d, i) => (
+            <div
+              key={i}
+              className="absolute transform -translate-x-1/2"
+              style={{
+                left: `${(i / (priceData.length - 1)) * 100}%`,
+                bottom: `${(d.price / maxPrice) * 100 + 5}%`
+              }}
+            >
+              <div className="bg-green-600 text-white text-xs px-2 py-1 rounded-md font-semibold shadow-md">
+                ₹{d.price}
               </div>
-              
-              {/* Connection Arrow */}
-              {index < data.length - 1 && (
-                <div className="hidden md:block absolute top-10 -right-4 z-10">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              )}
+            </div>
+          ))}
+        </div>
+
+        {/* X-axis labels */}
+        <div className="ml-6 flex justify-between mt-4">
+          {priceData.map((d, i) => (
+            <div key={i} className="text-center">
+              <div className="text-2xl mb-1">{d.icon}</div>
+              <div className="text-sm font-semibold text-gray-700">{d.step}</div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Chart insights */}
+      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h4 className="text-sm font-bold text-blue-800 mb-2">Price Analysis</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div>
+            <span className="text-blue-700 font-medium">Farmer Share:</span>
+            <span className="ml-1 font-bold">{Math.round((20/45) * 100)}%</span>
+          </div>
+          <div>
+            <span className="text-blue-700 font-medium">Total Markup:</span>
+            <span className="ml-1 font-bold">₹{45-20} (+{Math.round(((45-20)/20) * 100)}%)</span>
+          </div>
+          <div>
+            <span className="text-blue-700 font-medium">Highest Jump:</span>
+            <span className="ml-1 font-bold">Market → Retail (₹15)</span>
+          </div>
+        </div>
+      </div>
     </div>
-  )
+  );
+};
+
+// Custom hook for swipe gestures
+const useSwipe = (onSwipedLeft, onSwipedRight) => {
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = useCallback((e) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+
+    const distance = touchStartRef.current - touchEndRef.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && onSwipedLeft) {
+      onSwipedLeft();
+    } else if (isRightSwipe && onSwipedRight) {
+      onSwipedRight();
+    }
+  }, [onSwipedLeft, onSwipedRight]);
+
+  return {
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
+  };
+};
+
+export default function Timeline({ data }) {
+  const [activeStep, setActiveStep] = useState(0);
+  const currentStep = data[activeStep];
+
+  const nextStep = () => setActiveStep(prev => Math.min(data.length - 1, prev + 1));
+  const prevStep = () => setActiveStep(prev => Math.max(0, prev - 1));
+
+  const handleSwipeLeft = useCallback(() => {
+    setActiveStep((prev) => Math.min(data.length - 1, prev + 1));
+  }, [data.length]);
+
+  const handleSwipeRight = useCallback(() => {
+    setActiveStep((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const swipeHandlers = useSwipe(handleSwipeLeft, handleSwipeRight);
+
+  return (
+    <div className="w-full p-4">
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">{productData.name} Journey</h1>
+        <p className="text-gray-600 text-sm">Complete transparency from farm to table</p>
+      </div>
+
+      {/* Timeline Navigation - Hidden on mobile */}
+      <div className="mb-8 hidden md:block">
+        <div className="flex items-center justify-center overflow-x-auto pb-2">
+          <div className="flex items-center gap-2 min-w-max">
+            {data.map((step, index) => (
+              <React.Fragment key={step.id}>
+                <StepButton
+                  stepNumber={index + 1}
+                  isActive={activeStep === index}
+                  isCompleted={index < activeStep}
+                  icon={step.icon}
+                  title={step.title}
+                  onClick={() => setActiveStep(index)}
+                />
+                {index < data.length - 1 && (
+                  <div className={`h-0.5 w-8 rounded ${index < activeStep ? "bg-green-400" : "bg-gray-300"}`} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Step Details */}
+      <div 
+        className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden"
+        {...swipeHandlers}
+      >
+        <div className="bg-green-500 text-white p-5">
+          <div className="flex items-center">
+            <div className="text-2xl mr-4 bg-white/20 p-2 rounded-lg">{currentStep.icon}</div>
+            <div>
+              <h2 className="text-lg font-bold">Step {activeStep + 1}: {currentStep.title}</h2>
+              <p className="text-green-100 text-sm">{currentStep.date} • {currentStep.location}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 bg-green-50/30">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <div className="space-y-3">
+                {Object.entries(currentStep.basicInfo).map(([label, value], idx) => {
+                  const icon = label.includes('Date') ? '📅' : 
+                              label.includes('Location') ? '📍' : 
+                              label.includes('Name') ? '👤' : '📋';
+                  return (
+                    <InfoCard
+                      key={idx}
+                      label={label.replace(/📅|📍|👤/, '').trim()}
+                      value={value}
+                      icon={icon}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <div className="space-y-3">
+                {Object.entries(currentStep.detailedInfo).map(([label, value], idx) => {
+                  const icon = label.includes('Quantity') ? '📦' : 
+                              label.includes('Price') || label.includes('Cost') ? '💰' : 
+                              label.includes('Storage') || label.includes('Temperature') ? '🌡️' : 
+                              label.includes('Hash') ? '🔗' : '📊';
+                  return (
+                    <InfoCard
+                      key={idx}
+                      label={label.replace(/📦|💰|🌡️|🔗|📊/, '').trim()}
+                      value={value}
+                      icon={icon}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile swipe indicator */}
+          <div className="md:hidden text-center mt-4">
+            <p className="text-gray-600 text-sm">← Swipe to navigate →</p>
+          </div>
+
+          {/* Desktop Navigation - Hidden on mobile */}
+          <div className="hidden md:flex justify-between items-center mt-6">
+            <button
+              onClick={prevStep}
+              disabled={activeStep === 0}
+              className="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+            >
+              ← Previous
+            </button>
+
+            <div className="flex space-x-2">
+              {data.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveStep(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === activeStep ? "bg-green-500" : index < activeStep ? "bg-green-400" : "bg-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={nextStep}
+              disabled={activeStep === data.length - 1}
+              className="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+            >
+              Next →
+            </button>
+          </div>
+
+          {/* Mobile-only pagination dots */}
+          <div className="md:hidden flex justify-center items-center mt-4">
+            <div className="flex space-x-2">
+              {data.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveStep(index)}
+                  className={`w-3 h-3 rounded-full transition-colors ${
+                    index === activeStep ? "bg-green-500" : index < activeStep ? "bg-green-400" : "bg-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Price Chart */}
+      <PriceChart data={data} />
+    </div>
+  );
 }
