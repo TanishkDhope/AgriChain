@@ -122,15 +122,6 @@ export default function FarmerPage({ onLogout }) {
         <MapSection produce={produce} />
       </section>
 
-      <section
-        id="map"
-        ref={(el) => (sectionsRef.current["map"] = el)}
-        data-section
-        className="px-4 md:px-8 lg:px-12 py-12 md:py-16"
-      >
-        <MapSection produce={produce} />
-      </section>
-
       {/* <section
         id="account"
         ref={(el) => (sectionsRef.current["account"] = el)}
