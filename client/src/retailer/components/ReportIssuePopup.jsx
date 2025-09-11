@@ -1,36 +1,28 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { X, Flag, Camera, Send, Upload } from "lucide-react";
+import { X, Flag, Send, Upload } from "lucide-react";
 
 export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     issueType: "",
-    description: "",
     productId: "",
-    image: null
+    image: null,
+    description: ""
   });
-  
   const modalRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Handle ESC key press
   const handleKeyDown = useCallback((event) => {
-    if (event.key === 'Escape') {
-      onClose();
-    }
+    if (event.key === 'Escape') onClose();
   }, [onClose]);
 
-  // Handle click outside modal
   const handleClickOutside = useCallback((event) => {
-    if (modalRef.current && !modalRef.current.contains(event.target)) {
-      onClose();
-    }
+    if (modalRef.current && !modalRef.current.contains(event.target)) onClose();
   }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
       document.addEventListener('mousedown', handleClickOutside);
-      
       return () => {
         document.removeEventListener('keydown', handleKeyDown);
         document.removeEventListener('mousedown', handleClickOutside);
@@ -38,20 +30,13 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
     }
   }, [isOpen, handleKeyDown, handleClickOutside]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-    setFormData({ issueType: "", description: "", productId: "", image: null });
-    onClose();
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files;
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -75,42 +60,45 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (formData.description.trim()) {
+      onSubmit(formData);
+      setFormData({ issueType: "", productId: "", image: null, description: "" });
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div 
-        ref={modalRef}
-        className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-      >
+      <div ref={modalRef} className="bg-white rounded-xl shadow-xl w-full max-w-sm md:max-w-md max-h-[90vh] overflow-y-auto">
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-xl">
-              <Flag className="h-6 w-6 text-red-500" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900">Report Issue</h2>
+        <div className="flex items-center justify-between p-4 md:p-6 border-b">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Flag className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">Report Issue</h2>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="h-5 w-5 text-gray-500" />
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
+            <X className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Issue Type - Optional */}
+        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 md:space-y-6">
+          
+          {/* Issue Type (Optional) */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Issue Type <span className="text-gray-400 font-normal">(Optional)</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Issue Type <span className="text-gray-400 text-xs">(Optional)</span>
             </label>
             <select
               name="issueType"
               value={formData.issueType}
               onChange={handleInputChange}
-              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full p-2.5 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm md:text-base"
             >
               <option value="">Select issue type</option>
               <option value="quality">Product Quality Issue</option>
@@ -118,14 +106,16 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
               <option value="supply-chain">Supply Chain Problem</option>
               <option value="labeling">Incorrect Labeling</option>
               <option value="contamination">Contamination</option>
+              <option value="payment">Payment Issue</option>
+              <option value="fraud">Suspected Fraud</option>
               <option value="other">Other</option>
             </select>
           </div>
 
-          {/* Product ID */}
+          {/* Product ID (Optional) */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Product ID <span className="text-gray-400 font-normal">(Optional)</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Product ID <span className="text-gray-400 text-xs">(Optional)</span>
             </label>
             <input
               type="text"
@@ -133,14 +123,14 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
               value={formData.productId}
               onChange={handleInputChange}
               placeholder="Enter product ID or scan code"
-              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              className="w-full p-2.5 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm md:text-base"
             />
           </div>
 
-          {/* Image Upload - Optional */}
+          {/* Upload Image (Optional) */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Upload Image <span className="text-gray-400 font-normal">(Optional)</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Upload Image <span className="text-gray-400 text-xs">(Optional)</span>
             </label>
             
             {!formData.image ? (
@@ -155,19 +145,19 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-red-400 hover:bg-red-50 transition-colors flex flex-col items-center gap-2"
+                  className="w-full p-3 md:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-400 hover:bg-red-50 transition-colors flex flex-col items-center gap-2 text-sm md:text-base"
                 >
-                  <Upload className="h-8 w-8 text-gray-400" />
-                  <span className="text-sm text-gray-600">Click to upload image</span>
+                  <Upload className="h-6 w-6 md:h-8 md:w-8 text-gray-400" />
+                  <span className="text-gray-600">Click to upload image</span>
                   <span className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</span>
                 </button>
               </div>
             ) : (
-              <div className="relative rounded-xl overflow-hidden border border-gray-200">
+              <div className="relative rounded-lg overflow-hidden border border-gray-200">
                 <img
                   src={formData.image.preview}
                   alt="Upload preview"
-                  className="w-full h-48 object-cover"
+                  className="w-full h-32 md:h-48 object-cover"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
                   <button
@@ -185,9 +175,9 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
             )}
           </div>
 
-          {/* Description */}
+          {/* Description (Required) */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Description *
             </label>
             <textarea
@@ -197,22 +187,22 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
               required
               rows={4}
               placeholder="Please describe the issue in detail..."
-              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              className="w-full p-2.5 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm md:text-base"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 py-2.5 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm md:text-base"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center justify-center gap-2 transition-colors text-sm md:text-base"
             >
               <Send className="h-4 w-4" />
               Submit Report
