@@ -2,9 +2,14 @@ import { useState } from "react";
 import { validatePhone, validateAadhaar } from "../../lib/validators";
 import OtpModal from "./OtpModal";
 
+// 🔹 Import Firebase (auth & db)
+import { auth, db } from "../../../firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+
 export default function LoginForm({ onSuccess }) {
   const [currentStep, setCurrentStep] = useState("login");
   const [form, setForm] = useState({
+    email: "",
     phone: "",
     password: "",
     aadhaar: "",
@@ -18,6 +23,7 @@ export default function LoginForm({ onSuccess }) {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpError, setOtpError] = useState("");
 
+  // 🔹 Handle input change
   const handleChange = (field, value) => {
     const formattedValue =
       field === "phone"
@@ -28,23 +34,18 @@ export default function LoginForm({ onSuccess }) {
 
     setForm((prev) => ({ ...prev, [field]: formattedValue }));
 
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
     if (apiError) setApiError("");
   };
 
+  // 🔹 Validate login fields
   const validateLogin = () => {
     const newErrors = {};
 
     if (!form.email) {
-      errs.email = "Email is required for login";
-    } else if (!validateEmail(form.email)) {
-      errs.email = "Please enter a valid email address";
-    }
-
-    if (!form.password) {
-      errs.password = "Password is required";
+      newErrors.email = "Email is required";
+    } else if (!form.email.includes("@")) {
+      newErrors.email = "Invalid email format";
     }
 
     if (!form.phone) {
@@ -73,14 +74,14 @@ export default function LoginForm({ onSuccess }) {
     return Object.keys(newErrors).length === 0;
   };
 
+  // 🔹 Refresh captcha
   const refreshCaptcha = () => {
     setCaptchaId(Date.now());
     setForm((prev) => ({ ...prev, captcha: "" }));
-    if (errors.captcha) {
-      setErrors((prev) => ({ ...prev, captcha: "" }));
-    }
+    if (errors.captcha) setErrors((prev) => ({ ...prev, captcha: "" }));
   };
 
+  // 🔹 Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!validateLogin()) return;
@@ -89,10 +90,14 @@ export default function LoginForm({ onSuccess }) {
     setApiError("");
 
     try {
+      // Simulate login delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Open OTP modal (mock for now)
       setCurrentStep("otp");
       setShowOtpModal(true);
     } catch (error) {
+      console.error(error);
       setApiError("Login failed. Please check your credentials.");
       refreshCaptcha();
     } finally {
@@ -100,19 +105,50 @@ export default function LoginForm({ onSuccess }) {
     }
   };
 
+  // 🔹 Handle OTP Verify (Role-based support added here)
   const handleOtpVerify = async (otp) => {
     setIsSubmitting(true);
     setOtpError("");
 
     try {
+      // Mock OTP delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      onSuccess({
-        phone: form.phone,
-        aadhaar: form.aadhaar,
-        loginTime: new Date().toISOString(),
-      });
+      const userRef = doc(db, "users", form.email);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // New user → save Aadhaar & phone, but no role yet
+        await setDoc(userRef, {
+          email: form.email,
+          phone: "+91" + form.phone,
+          aadhaar: form.aadhaar,
+          loginTime: new Date().toISOString(),
+          role: null, // 🚨 no role yet
+        });
+
+        // Send user to role selection
+        onSuccess({ step: "role-selection", email: form.email, phone: "+91" + form.phone });
+        return;
+      }
+
+      const userData = userSnap.data();
+
+      if (!userData.role) {
+        // Existing user but no role → go to role selection
+        onSuccess({ step: "role-selection", email: form.email, phone: "+91" + form.phone });
+      } else {
+        // Existing user with role → go to role dashboard
+        onSuccess({
+          email: form.email,
+          phone: "+91" + form.phone,
+          aadhaar: userData.aadhaar,
+          role: userData.role,
+          loginTime: new Date().toISOString(),
+        });
+      }
     } catch (error) {
+      console.error(error);
       setOtpError("Invalid OTP. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -138,6 +174,27 @@ export default function LoginForm({ onSuccess }) {
 
       {currentStep === "login" && (
         <form onSubmit={handleLogin} className="space-y-4">
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
+            </label>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={form.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+                errors.email ? "border-red-300" : "border-gray-300"
+              }`}
+              disabled={isSubmitting}
+            />
+            {errors.email && (
+              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+            )}
+          </div>
+
+          {/* Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Phone Number *
@@ -157,6 +214,7 @@ export default function LoginForm({ onSuccess }) {
             )}
           </div>
 
+          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password *
@@ -185,6 +243,7 @@ export default function LoginForm({ onSuccess }) {
             )}
           </div>
 
+          {/* Aadhaar */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Aadhaar Number *
@@ -204,6 +263,7 @@ export default function LoginForm({ onSuccess }) {
             )}
           </div>
 
+          {/* Captcha */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Security Verification *
@@ -255,6 +315,7 @@ export default function LoginForm({ onSuccess }) {
         </form>
       )}
 
+      {/* OTP Modal */}
       <OtpModal
         isOpen={showOtpModal}
         onClose={() => {

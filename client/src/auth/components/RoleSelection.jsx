@@ -1,6 +1,8 @@
 import { ArrowLeft, User, Store, ShoppingCart } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { auth, db } from "../../../firebase";
+import { doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
 
 export default function RoleSelection({ onBack, onRoleSelect }) {
   const [selectedRole, setSelectedRole] = useState(null);
@@ -18,7 +20,7 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
       stats: { users: "50K+", growth: "25%", rating: "4.8" }
     },
     {
-      id: "retailer", 
+      id: "retailer",
       title: "Retailer",
       description: "Source quality produce and manage your supply chain",
       icon: Store,
@@ -28,7 +30,7 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
     },
     {
       id: "consumer",
-      title: "Consumer", 
+      title: "Consumer",
       description: "Buy fresh produce and trace its journey from farm",
       icon: ShoppingCart,
       color: "rose",
@@ -37,28 +39,53 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
     }
   ];
 
+  // ✅ Fetch existing role from Firestore on mount
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      try {
+        const userRef = doc(db, "users", user.phone);
+        const snap = await getDoc(userRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.role) {
+            setSelectedRole(data.role);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching role:", error);
+      }
+    };
+
+    fetchUserRole();
+  }, []);
+
   const handleRoleSelect = async (roleId) => {
     setSelectedRole(roleId);
     setIsLoading(true);
-    
+
     try {
-      // Store user role data
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const updatedUser = { ...userData, role: roleId };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      // Call parent callback if provided
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not logged in");
+
+      // ✅ Store role in Firestore
+      const userRef = doc(db, "users", user.email);
+      await setDoc(userRef, { role: roleId }, { merge: true });
+
+      // ✅ Call parent callback
       if (onRoleSelect) {
         onRoleSelect(roleId);
       }
-      
-      // Simulate loading time for better UX
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Navigate to the appropriate dashboard
+
+      // Simulate loading UX
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // ✅ Navigate to dashboard
       navigate(`/dashboard/${roleId}`);
     } catch (error) {
-      console.error("Navigation failed:", error);
+      console.error("Role selection failed:", error);
       setIsLoading(false);
     }
   };
@@ -66,22 +93,28 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
   const getColorClasses = (color, isSelected) => {
     const colors = {
       yellow: {
-        bg: isSelected ? 'bg-yellow-50 border-yellow-500 ring-2 ring-yellow-200' : 'bg-white border-gray-200 hover:border-yellow-300 hover:shadow-md',
-        button: 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-200',
-        icon: 'text-yellow-600',
-        text: 'text-yellow-700'
+        bg: isSelected
+          ? "bg-yellow-50 border-yellow-500 ring-2 ring-yellow-200"
+          : "bg-white border-gray-200 hover:border-yellow-300 hover:shadow-md",
+        button: "bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-200",
+        icon: "text-yellow-600",
+        text: "text-yellow-700"
       },
       blue: {
-        bg: isSelected ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200' : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md',
-        button: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-200',
-        icon: 'text-blue-600',
-        text: 'text-blue-700'
+        bg: isSelected
+          ? "bg-blue-50 border-blue-500 ring-2 ring-blue-200"
+          : "bg-white border-gray-200 hover:border-blue-300 hover:shadow-md",
+        button: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-200",
+        icon: "text-blue-600",
+        text: "text-blue-700"
       },
       rose: {
-        bg: isSelected ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-200' : 'bg-white border-gray-200 hover:border-rose-300 hover:shadow-md',
-        button: 'bg-rose-600 hover:bg-rose-700 focus:ring-rose-200',
-        icon: 'text-rose-600',
-        text: 'text-rose-700'
+        bg: isSelected
+          ? "bg-rose-50 border-rose-500 ring-2 ring-rose-200"
+          : "bg-white border-gray-200 hover:border-rose-300 hover:shadow-md",
+        button: "bg-rose-600 hover:bg-rose-700 focus:ring-rose-200",
+        icon: "text-rose-600",
+        text: "text-rose-700"
       }
     };
     return colors[color];
@@ -90,7 +123,6 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 p-6">
       <div className="max-w-5xl mx-auto">
-        
         {/* Header */}
         <header className="mb-10">
           <button
@@ -126,27 +158,30 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
               <article
                 key={role.id}
                 className={`border-2 rounded-xl p-6 transition-all cursor-pointer transform hover:scale-105 ${colorClasses.bg} ${
-                  isSelected ? 'scale-105' : ''
+                  isSelected ? "scale-105" : ""
                 }`}
                 onClick={() => !isLoading && handleRoleSelect(role.id)}
               >
                 <header className="text-center mb-6">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gray-100 mb-4 ${colorClasses.icon}`}>
+                  <div
+                    className={`inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gray-100 mb-4 ${colorClasses.icon}`}
+                  >
                     <IconComponent size={28} />
                   </div>
                   <h3 className={`text-2xl font-bold mb-2 ${colorClasses.text}`}>
                     {role.title}
                   </h3>
-                  <p className="text-gray-600">
-                    {role.description}
-                  </p>
+                  <p className="text-gray-600">{role.description}</p>
                 </header>
 
                 {/* Features */}
                 <div className="mb-6">
                   <ul className="space-y-3">
                     {role.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center text-sm text-gray-700">
+                      <li
+                        key={idx}
+                        className="flex items-center text-sm text-gray-700"
+                      >
                         <div className="w-2 h-2 bg-current rounded-full mr-3 opacity-60"></div>
                         <span>{feature}</span>
                       </li>
@@ -158,15 +193,21 @@ export default function RoleSelection({ onBack, onRoleSelect }) {
                 <div className="bg-white bg-opacity-70 rounded-lg p-4 mb-6">
                   <div className="grid grid-cols-3 gap-4 text-center text-sm">
                     <div>
-                      <div className="font-bold text-gray-800">{role.stats.users}</div>
+                      <div className="font-bold text-gray-800">
+                        {role.stats.users}
+                      </div>
                       <div className="text-xs text-gray-500">Users</div>
                     </div>
                     <div>
-                      <div className="font-bold text-green-600">+{role.stats.growth}</div>
+                      <div className="font-bold text-green-600">
+                        +{role.stats.growth}
+                      </div>
                       <div className="text-xs text-gray-500">Growth</div>
                     </div>
                     <div>
-                      <div className="font-bold text-yellow-600">★ {role.stats.rating}</div>
+                      <div className="font-bold text-yellow-600">
+                        ★ {role.stats.rating}
+                      </div>
                       <div className="text-xs text-gray-500">Rating</div>
                     </div>
                   </div>

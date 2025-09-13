@@ -5,6 +5,10 @@ import {
   validateAadhaar,
 } from "../../lib/validators";
 import OtpModal from "./OtpModal";
+import { auth, db, storage } from "../../../firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function SignupForm({ onSuccess }) {
   const [phoneVerificationStep, setPhoneVerificationStep] = useState("input");
@@ -177,24 +181,44 @@ export default function SignupForm({ onSuccess }) {
   };
 
 const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validate()) return;
+    e.preventDefault();
+    if (!validate()) return;
 
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // 1️⃣ Create User in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
+      const user = userCredential.user;
 
+
+
+      // 3️⃣ Save user details in Firestore
+      await setDoc(doc(db, "users", user.email), {
+        fullName: form.fullName.trim(),
+        phone: form.phone,
+        email: form.email,
+        aadhaar: form.aadhaar,
+        signupTime: new Date().toISOString(),
+        walletAddress: "",
+      });
+
+      // 4️⃣ Notify parent
       onSuccess({
         fullName: form.fullName.trim(),
         phone: form.phone,
         email: form.email,
         aadhaar: form.aadhaar,
-        aadhaarFile: form.aadhaarFile,
         signupTime: new Date().toISOString(),
+        walletAddress: "",
       });
     } catch (error) {
       console.error("Signup failed:", error);
+      setErrors({ email: error.message });
     } finally {
       setIsSubmitting(false);
     }

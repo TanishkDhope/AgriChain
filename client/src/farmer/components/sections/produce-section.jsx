@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-import { useMemo, useState, useEffect } from "react"
-import { Button } from "../../../components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../../components/ui/card"
-import { Input } from "../../../components/ui/input"
-import { Label } from "../../../components/ui/label"
-import { Badge } from "../../../components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../../components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
-import { emptyProduce, produceTypes } from "../../lib/data"
-import { mint, getUserTokens } from "../../../blockchain/product_registry.js"
-=======
 import { useMemo, useState } from "react"
 import { Button } from "../ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
@@ -43,7 +30,6 @@ function emptyProduce() {
     locality: "",
   }
 }
->>>>>>> kaushal
 
 export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
   const [open, setOpen] = useState(false)
@@ -347,34 +333,6 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                 </Select>
               </div>
 
-<<<<<<< HEAD
-      <Tabs defaultValue="cards" className="mt-6">
-        <TabsList>
-          <TabsTrigger value="cards">Card View</TabsTrigger>
-          <TabsTrigger value="table">Table View</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="cards" className="mt-4">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {produce.map((p) => (
-              <Card
-                key={p.id}
-                className="bg-background/60 backdrop-blur border-emerald-200/30 hover:shadow-sm transition"
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{p.name}</span>
-                    <Badge variant="outline" className="border-emerald-500 text-emerald-700">
-                      Blockchain
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-2">
-                  <img
-                    src={p.imageCid ? `https://gateway.pinata.cloud/ipfs/${p.imageCid}` : `/placeholder.svg?height=120&width=240&query=produce image placeholder`}
-                    alt={`${p.name} image`}
-                    className="w-full h-28 object-cover rounded-md border"
-=======
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="block text-sm font-semibold text-gray-700 mb-3">Quantity (kg) *</Label>
@@ -383,7 +341,6 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                     value={form.quantity}
                     onChange={(e) => setForm({...form, quantity: e.target.value})}
                     className="h-12 border-gray-200"
->>>>>>> kaushal
                   />
                 </div>
                 <div>
@@ -440,179 +397,6 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                     <span className="text-gray-600 font-medium">Name:</span>
                     <span className="font-semibold text-gray-900">{form.name || "Enter name..."}</span>
                   </div>
-<<<<<<< HEAD
-                  {p.ipfsCid && (
-                    <div className="text-xs text-blue-600">
-                      IPFS CID: {p.ipfsCid.slice(0, 10)}...
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="flex items-center justify-between">
-                  <Button variant="outline" size="sm" onClick={() => startEdit(p)}>
-                    Edit
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => onDelete(p.id)}>
-                    Delete
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="table" className="mt-4">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Base Price</TableHead>
-                  <TableHead>Locality</TableHead>
-                  <TableHead>Certificate</TableHead>
-                  <TableHead>IPFS CID</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {produce.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>{p.name}</TableCell>
-                    <TableCell>{p.type}</TableCell>
-                    <TableCell>{p.quantity}</TableCell>
-                    <TableCell>₹{p.basePrice}</TableCell>
-                    <TableCell>{p.locality}</TableCell>
-                    <TableCell>{p.certificate ? "Yes" : "No"}</TableCell>
-                    <TableCell className="text-xs">
-                      {p.ipfsCid ? `${p.ipfsCid.slice(0, 10)}...` : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button size="sm" variant="outline" onClick={() => startEdit(p)}>
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => onDelete(p.id)}>
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <div>
-        {tokens?.map((t, idx) => (
-          <div key={idx} className="token-card">
-            <img src={t.image} alt={t.name} />
-            <h3>{t.name}</h3>
-            <p>ID: {t.id.toString()}</p>
-            <p>Balance: {t.balance}</p>
-            <p>{t.description}</p>
-          </div>
-        ))}
-      </div>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <span className="sr-only">Open Produce Dialog</span>
-        </DialogTrigger>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Edit Produce" : "Add Produce"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3">
-            <LabeledInput label="Name *">
-              <Input
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Tomatoes"
-                required
-              />
-            </LabeledInput>
-            <LabeledInput label="Type *">
-              <Input
-                list="produce-types"
-                value={form.type}
-                onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                placeholder="Vegetable"
-                required
-              />
-              <datalist id="produce-types">
-                {produceTypes.map((t) => (
-                  <option key={t} value={t} />
-                ))}
-              </datalist>
-            </LabeledInput>
-            <LabeledInput label="Quantity (kg) *">
-              <Input
-                type="number"
-                min={0}
-                value={form.quantity}
-                onChange={(e) => setForm((f) => ({ ...f, quantity: Number(e.target.value) }))}
-                placeholder="100"
-                required
-              />
-            </LabeledInput>
-            <LabeledInput label="Base Price (₹/kg) *">
-              <Input
-                type="number"
-                min={0}
-                value={form.basePrice}
-                onChange={(e) => setForm((f) => ({ ...f, basePrice: Number(e.target.value) }))}
-                placeholder="25"
-                required
-              />
-            </LabeledInput>
-            <LabeledInput label="Locality *">
-              <Input
-                value={form.locality}
-                onChange={(e) => setForm((f) => ({ ...f, locality: e.target.value }))}
-                placeholder="Nashik, MH"
-                required
-              />
-            </LabeledInput>
-            <LabeledInput label="Quality Certificate URL (optional)">
-              <Input
-                value={form.certificate || ""}
-                onChange={(e) => setForm((f) => ({ ...f, certificate: e.target.value || undefined }))}
-                placeholder="https://gateway/your-cert"
-              />
-            </LabeledInput>
-            <LabeledInput label="Produce Image">
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-              />
-              {selectedImage && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Selected: {selectedImage.name}
-                </p>
-              )}
-            </LabeledInput>
-          </div>
-          <div className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={isUploading}>
-              Cancel
-            </Button>
-            <Button 
-              className="bg-emerald-600 hover:bg-emerald-700" 
-              onClick={submit}
-              disabled={isUploading}
-            >
-              {isUploading ? "Uploading & Minting..." : (editing ? "Save Changes" : "Add & Mint Tokens")}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-=======
                   
                   <div className="flex justify-between items-center py-2">
                     <span className="text-gray-600 font-medium">Type:</span>
@@ -744,6 +528,5 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
         </Card>
       </div>
     </section>
->>>>>>> kaushal
   )
 }

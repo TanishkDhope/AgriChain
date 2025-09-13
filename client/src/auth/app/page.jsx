@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { db } from "../../../firebase"; // ✅ adjust path
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import LoginForm from "../components/forms/LoginForm";
 import SignupForm from "../components/forms/SignupForm";
 import RoleSelection from "../components/RoleSelection";
@@ -10,42 +12,54 @@ export default function AuthPage({ onAuthSuccess }) {
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
-  // Modified to handle different sources (login vs signup)
-  const handleAuthSuccess = (data, source) => {
+  const handleAuthSuccess = async (data, source) => {
     setUserData(data);
-    
+
     if (source === "signup") {
-      // From signup -> Show role selection
+      // From signup -> force role selection
       setShowRoleSelection(true);
     } else if (source === "login") {
-      // From login -> Direct redirect to retailer dashboard
-      localStorage.setItem("user", JSON.stringify(data));
-      
-      if (onAuthSuccess) {
-        onAuthSuccess(data);
+      try {
+        // 🔎 Check Firestore for existing role
+        const userRef = doc(db, "users", data.email || data.phone);
+        const snap = await getDoc(userRef);
+
+        if (snap.exists() && snap.data().role) {
+          const completeUserData = { ...data, role: snap.data().role };
+          localStorage.setItem("user", JSON.stringify(completeUserData));
+
+          if (onAuthSuccess) onAuthSuccess(completeUserData);
+
+          // ✅ Redirect to role-specific dashboard
+          navigate(`/dashboard/${snap.data().role}`);
+        } else {
+          // No role found -> force Role Selection
+          setShowRoleSelection(true);
+        }
+      } catch (err) {
+        console.error("Error checking user role:", err);
+        setShowRoleSelection(true); // fallback
       }
-      
-      window.location.href = "/#/dashboard/retailer";
     }
   };
 
-  const handleRoleSelected = (role) => {
+  const handleRoleSelected = async (role) => {
     const completeUserData = { ...userData, role };
 
-    // Store complete user data
+    // ✅ Save to Firestore
+    const userRef = doc(db, "users", userData.email || userData.phone);
+    await setDoc(userRef, completeUserData, { merge: true });
+
+    // ✅ Save locally
     localStorage.setItem("user", JSON.stringify(completeUserData));
+    if (onAuthSuccess) onAuthSuccess(completeUserData);
 
-    // Call parent callback if provided
-    if (onAuthSuccess) {
-      onAuthSuccess(completeUserData);
-    }
-
-    // Navigate to role-specific dashboard
+    // ✅ Redirect
     navigate(`/dashboard/${role}`);
   };
 
   const handleBackToLogin = () => {
-    navigate('/');
+    navigate("/");
     setShowRoleSelection(false);
     setUserData(null);
   };
@@ -68,12 +82,10 @@ export default function AuthPage({ onAuthSuccess }) {
             🌱
           </div>
           <h1 className="text-2xl font-bold text-gray-900">AgriChain</h1>
-          <p className="text-sm text-gray-600">
-            Farm to Fork Traceability System
-          </p>
+          <p className="text-sm text-gray-600">Farm to Fork Traceability System</p>
         </header>
 
-        {/* Navigation Tabs */}
+        {/* Tabs */}
         <nav className="flex border-b mb-6">
           <button
             className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
@@ -97,7 +109,7 @@ export default function AuthPage({ onAuthSuccess }) {
           </button>
         </nav>
 
-        {/* Form Content */}
+        {/* Forms */}
         <div>
           {tab === "login" ? (
             <LoginForm onSuccess={(data) => handleAuthSuccess(data, "login")} />
