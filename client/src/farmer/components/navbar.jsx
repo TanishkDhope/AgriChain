@@ -1,27 +1,29 @@
 import { useEffect, useState } from "react"
-import { Button } from "../components/ui/button";
-import { Menu, X, User, LogOut, Sprout, Leaf, Warehouse, ShoppingCart, HelpCircle, BarChart3 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { gsap } from "gsap"
+import { ScrollToPlugin } from "gsap/ScrollToPlugin"
+import { Menu, X, User, LogOut, Sprout, Leaf, Warehouse, ShoppingCart, HelpCircle, BarChart3, Map } from "lucide-react"
 
-export default function Navbar({ activeSection, scrollToSection, onLogout, showProfileModal, setShowProfileModal }) {
+export default function Navbar({ onNavigate, activeSection, onLogout, showProfileModal, setShowProfileModal }) {
+  const [scrolled, setScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
 
   const navItems = [
     { id: "home", label: "Home", icon: "Leaf" },
     { id: "produce", label: "My Produce", icon: "Warehouse" },
-    { id: "market", label: "Market", icon: "ShoppingCart" },
-    { id: "queries", label: "Q&A", icon: "HelpCircle" },
+    { id: "market", label: "Local Market", icon: "ShoppingCart" },
+    { id: "queries", label: "Queries", icon: "HelpCircle" },
     { id: "reports", label: "Reports", icon: "BarChart3" },
+    { id: "map", label: "Map", icon: "Map" },
   ]
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
-    }
-    
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    gsap.registerPlugin(ScrollToPlugin)
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    onScroll()
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   useEffect(() => {
@@ -34,6 +36,16 @@ export default function Navbar({ activeSection, scrollToSection, onLogout, showP
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  const go = (id) => {
+    gsap.to(window, {
+      duration: 0.8,
+      ease: "power2.out",
+      scrollTo: { y: `#${id}`, offsetY: 72 },
+    })
+    onNavigate(id)
+    setIsMobileMenuOpen(false) // Close mobile menu on navigation
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("user")
@@ -50,13 +62,15 @@ export default function Navbar({ activeSection, scrollToSection, onLogout, showP
       Warehouse, 
       ShoppingCart, 
       HelpCircle, 
-      BarChart3
+      BarChart3,
+      Map
     }
     return icons[iconName] || Leaf
   }
 
   return (
     <>
+      {/* Overlay for mobile menu and user menu */}
       {(showUserMenu || isMobileMenuOpen) && (
         <div 
           className="fixed inset-0 z-40 bg-black/20 lg:bg-transparent" 
@@ -67,12 +81,16 @@ export default function Navbar({ activeSection, scrollToSection, onLogout, showP
         />
       )}
 
-      <nav className={`bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 text-white shadow-xl sticky top-0 z-50 transition-all duration-200 ${
-        scrolled ? 'shadow-2xl' : ''
-      }`}>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 text-white shadow-xl transition-all duration-200 ${
+          scrolled ? 'shadow-2xl' : ''
+        }`}
+        role="navigation"
+        aria-label="Main Navigation"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            {/* Farmer Logo */}
+            {/* Logo Section */}
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 <Sprout className="h-7 w-7 text-white" />
@@ -88,29 +106,31 @@ export default function Navbar({ activeSection, scrollToSection, onLogout, showP
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
+            <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2">
               {navItems.map((item) => {
                 const Icon = getIconComponent(item.icon)
                 const isActive = activeSection === item.id
                 return (
                   <button
                     key={item.id}
-                    onClick={() => scrollToSection(item.id)}
+                    onClick={() => go(item.id)}
                     className={`flex items-center space-x-2 px-3 xl:px-4 py-2 rounded-lg transition-all duration-200 ${
                       isActive
                         ? "bg-white text-green-700 shadow-md font-semibold"
                         : "text-white hover:text-green-100 hover:bg-white/20"
                     }`}
+                    aria-label={`Go to ${item.label}`}
                   >
                     <Icon className="w-4 h-4" />
                     <span className="font-medium text-sm">{item.label}</span>
                   </button>
                 )
               })}
-            </div>
+            </nav>
 
             {/* User Menu & Mobile Toggle */}
             <div className="flex items-center gap-2 sm:gap-4">
+              {/* User Menu */}
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -129,7 +149,7 @@ export default function Navbar({ activeSection, scrollToSection, onLogout, showP
                     <button
                       onClick={() => {
                         setShowUserMenu(false);
-                        setShowProfileModal(true);
+                        if (setShowProfileModal) setShowProfileModal(true);
                       }}
                       className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                     >
@@ -147,6 +167,7 @@ export default function Navbar({ activeSection, scrollToSection, onLogout, showP
                 )}
               </div>
 
+              {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="lg:hidden p-2 rounded-xl hover:bg-white/20 transition-colors"
@@ -171,15 +192,13 @@ export default function Navbar({ activeSection, scrollToSection, onLogout, showP
                   return (
                     <button
                       key={item.id}
-                      onClick={() => {
-                        scrollToSection(item.id)
-                        setIsMobileMenuOpen(false)
-                      }}
+                      onClick={() => go(item.id)}
                       className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                         isActive
                           ? "bg-white text-green-700 font-semibold"
                           : "text-white hover:text-green-100 hover:bg-white/20"
                       }`}
+                      aria-label={`Go to ${item.label}`}
                     >
                       <Icon className="w-5 h-5" />
                       <span className="font-medium">{item.label}</span>
@@ -190,7 +209,7 @@ export default function Navbar({ activeSection, scrollToSection, onLogout, showP
             </div>
           )}
         </div>
-      </nav>
+      </header>
     </>
   )
 }

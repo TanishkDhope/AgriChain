@@ -5,6 +5,7 @@ import ScanModal from "../components/ScanModal";
 import LoadingOverlay from "../components/LoadingOverlay";
 import Notification from "../components/Notification";
 import Footer from "../components/Footer";
+import Chatbot from "./Chatbot";
 
 export default function ConsumerHomePage() {
   const [showScanModal, setShowScanModal] = useState(false);
@@ -13,7 +14,7 @@ export default function ConsumerHomePage() {
   const [notification, setNotification] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem('scanHistory');
+    const saved = localStorage.getItem("scanHistory");
     if (saved) setScanHistory(JSON.parse(saved));
   }, []);
 
@@ -25,7 +26,7 @@ export default function ConsumerHomePage() {
   const handleScan = (method) => {
     setShowScanModal(false);
     setIsScanning(true);
-    
+
     setTimeout(() => {
       const newScan = {
         id: Date.now(),
@@ -33,13 +34,13 @@ export default function ConsumerHomePage() {
         origin: "Farm Valley Co.",
         date: new Date().toLocaleDateString(),
         status: Math.random() > 0.3 ? "Verified" : "Warning",
-        qrCode: `QR${Date.now()}`
+        qrCode: `QR${Date.now()}`,
       };
-      
+
       const updated = [newScan, ...scanHistory].slice(0, 10);
       setScanHistory(updated);
-      localStorage.setItem('scanHistory', JSON.stringify(updated));
-      
+      localStorage.setItem("scanHistory", JSON.stringify(updated));
+
       setIsScanning(false);
       showNotification(`Product scanned: ${newScan.productName}`);
     }, 2000);
@@ -49,21 +50,21 @@ export default function ConsumerHomePage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
       <Notification message={notification} />
       <LoadingOverlay isVisible={isScanning} />
-      
+
       <Header scanCount={scanHistory.length} />
-      
-      <MainContent 
+
+      <MainContent
         scanHistory={scanHistory}
         onScanClick={() => setShowScanModal(true)}
         onNotification={showNotification}
       />
 
-      <ScanModal 
+      <ScanModal
         isVisible={showScanModal}
         onClose={() => setShowScanModal(false)}
         onScan={handleScan}
       />
-
+      <Chatbot />
       <Footer />
     </div>
   );

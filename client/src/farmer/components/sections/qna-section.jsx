@@ -1,24 +1,16 @@
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { Textarea } from "../ui/textarea"
-import { Badge } from "../ui/badge"
-import { MessageCircle, ThumbsUp, Send, Plus } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
 const initialQA = [
   {
     id: "q1",
     question: "How to store tomatoes to increase shelf life?",
     answers: [
-      { id: "a1", text: "Keep them at room temperature and avoid direct sunlight for better ripening.", helpful: 4 },
-      { id: "a2", text: "Do not refrigerate unless fully ripe. Cold temperatures affect taste.", helpful: 2 },
-    ],
-  },
-  {
-    id: "q2", 
-    question: "Best fertilizer for organic vegetable farming?",
-    answers: [
-      { id: "a3", text: "Compost and vermicompost work excellently for organic vegetables.", helpful: 6 },
+      { id: "a1", text: "Keep them at room temperature and avoid sunlight.", helpful: 4 },
+      { id: "a2", text: "Do not refrigerate unless fully ripe.", helpful: 2 },
     ],
   },
 ]
@@ -39,9 +31,7 @@ export default function QnASection() {
     if (!text) return
     setQa((prev) =>
       prev.map((q) =>
-        q.id === qid
-          ? { ...q, answers: [...q.answers, { id: crypto.randomUUID(), text, helpful: 0 }] }
-          : q
+        q.id === qid ? { ...q, answers: [...q.answers, { id: crypto.randomUUID(), text, helpful: 0 }] } : q
       )
     )
     setAText((m) => ({ ...m, [qid]: "" }))
@@ -58,133 +48,71 @@ export default function QnASection() {
   }
 
   return (
-    <section 
-      id="queries" 
-      className="py-16 px-6 bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50" 
-      style={{ scrollMarginTop: '30px' }}
-    >
-      <div className="max-w-7xl mx-auto">
-        
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">Community Q&A</h2>
-          <p className="text-gray-600">Ask questions, share answers, and mark helpful tips</p>
-        </div>
+    <div>
+      <h2 className="text-2xl font-bold">Queries & QnA</h2>
+      <p className="text-muted-foreground">Ask questions, share answers, and mark helpful tips.</p>
 
-        {/* Ask Question */}
-        <Card className="border-0 shadow-sm mb-10">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center space-x-2">
-              <Plus className="w-5 h-5 text-blue-600" />
-              <span>Ask a Question</span>
-            </CardTitle>
+      <div className="mt-4 grid md:grid-cols-3 gap-4">
+        <Card className="md:col-span-1 bg-background/60 backdrop-blur">
+          <CardHeader>
+            <CardTitle>Ask a Question</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="grid gap-3">
             <Textarea
+              placeholder="Type your question..."
               value={qText}
               onChange={(e) => setQText(e.target.value)}
-              placeholder="What would you like to know about farming, produce storage, or market trends?"
-              className="border-gray-200"
-              rows={4}
             />
-            <Button 
-              onClick={ask} 
-              disabled={!qText.trim()}
-              className="h-12 text-base"
-            >
-              <Send className="h-4 w-4 mr-2" />
-              Ask Question
+            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={ask}>
+              Ask
             </Button>
           </CardContent>
         </Card>
 
-        {/* Questions & Answers */}
-        <div className="space-y-6 mb-10">
+        <div className="md:col-span-2 grid gap-4">
           {qa.map((q) => (
-            <Card key={q.id} className="border-0 shadow-sm">
+            <Card key={q.id} className="bg-background/60 backdrop-blur">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-medium">{q.question}</CardTitle>
-                  <Badge variant="secondary" className="text-xs">
-                    {q.answers.length} {q.answers.length === 1 ? 'Answer' : 'Answers'}
-                  </Badge>
-                </div>
+                <CardTitle className="text-base">{q.question}</CardTitle>
               </CardHeader>
-              <CardContent>
-                {/* Answers */}
-                <div className="space-y-4 mb-6">
-                  {q.answers.length > 0 ? (
+              <CardContent className="grid gap-3">
+                <div className="grid gap-2">
+                  {q.answers.length ? (
                     q.answers.map((a) => (
-                      <div key={a.id} className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-gray-800 mb-3">{a.text}</p>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => markHelpful(q.id, a.id)}
-                          className="text-gray-600 hover:bg-gray-100"
-                        >
-                          <ThumbsUp className="h-3 w-3 mr-1" />
+                      <div
+                        key={a.id}
+                        className="flex items-start justify-between gap-4 border rounded-md p-3"
+                        role="group"
+                        aria-label="Answer item"
+                      >
+                        <p className="text-sm">{a.text}</p>
+                        <Button size="sm" variant="outline" onClick={() => markHelpful(q.id, a.id)}>
                           Helpful ({a.helpful})
                         </Button>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                      <p>No answers yet. Be the first to help!</p>
-                    </div>
+                    <p className="text-sm text-muted-foreground">No answers yet.</p>
                   )}
                 </div>
-
-                {/* Add Answer */}
-                <div className="border-t pt-4">
-                  <div className="space-y-3">
-                    <Textarea
-                      value={aText[q.id] || ""}
-                      onChange={(e) => setAText({ ...aText, [q.id]: e.target.value })}
-                      placeholder="Share your knowledge and help fellow farmers..."
-                      className="border-gray-200"
-                      rows={3}
-                    />
-                    <Button
-                      onClick={() => answer(q.id)}
-                      size="sm"
-                      disabled={!aText[q.id]?.trim()}
-                    >
-                      <Send className="h-3 w-3 mr-1" />
-                      Post Answer
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Write an answer..."
+                    value={aText[q.id] || ""}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setAText((m) => ({ ...m, [q.id]: v }))
+                    }}
+                  />
+                  <Button size="sm" onClick={() => answer(q.id)}>
+                    Answer
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-
-        {/* Community Stats - Same as retailer style */}
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <p className="text-3xl font-bold text-blue-600 mb-2">{qa.length}</p>
-                <p className="text-sm text-blue-700">Total Questions</p>
-              </div>
-              <div className="p-4 bg-green-50 rounded-lg">
-                <p className="text-3xl font-bold text-green-600 mb-2">
-                  {qa.reduce((sum, q) => sum + q.answers.length, 0)}
-                </p>
-                <p className="text-sm text-green-700">Total Answers</p>
-              </div>
-              <div className="p-4 bg-purple-50 rounded-lg">
-                <p className="text-3xl font-bold text-purple-600 mb-2">
-                  {qa.reduce((sum, q) => sum + q.answers.reduce((aSum, a) => aSum + a.helpful, 0), 0)}
-                </p>
-                <p className="text-sm text-purple-700">Helpful Votes</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
-    </section>
+    </div>
   )
 }
