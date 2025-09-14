@@ -31,6 +31,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../../components/ui/tabs";
+import { QRCodeSVG } from "qrcode.react"; // ✅ Added for QR codes
 import { emptyProduce, produceTypes } from "../../lib/data";
 import {
   mint,
@@ -46,9 +47,12 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // ✅ QR popup state
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrToken, setQrToken] = useState(null);
+
   // ⚠️ Never hardcode JWT in production frontend!
-  const JWT =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJiNmI3M2VlOS1lNzRlLTQ0YTEtODgxNi05Nzc4NWRhNjljZjYiLCJlbWFpbCI6InRhbmlzaGtkaG9wZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiNmU2ZjQxNWMzYjk0MmUyOTI4MzUiLCJzY29wZWRLZXlTZWNyZXQiOiI3YTQ5NjUxNjI1ZGE0YjU2MzYyYjRiNjIyOGEzM2M1MGI3MDRiM2MzZGE0MGZmMDI1M2MzY2YyMWFjNmE3YjgxIiwiZXhwIjoxNzg4NTg2Mjg3fQ.oYZeQNa7NcFKTysjoZ7O2iFbp0eeRNKUWBARJu3QW0U";
+  const JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJiNmI3M2VlOS1lNzRlLTQ0YTEtODgxNi05Nzc4NWRhNjljZjYiLCJlbWFpbCI6InRhbmlzaGtkaG9wZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiNmU2ZjQxNWMzYjk0MmUyOTI4MzUiLCJzY29wZWRLZXlTZWNyZXQiOiI3YTQ5NjUxNjI1ZGE0YjU2MzYyYjRiNjIyOGEzM2M1MGI3MDRiM2MzZGE0MGZmMDI1M2MzY2YyMWFjNmE3YjgxIiwiZXhwIjoxNzg4NTg2Mjg3fQ.oYZeQNa7NcFKTysjoZ7O2iFbp0eeRNKUWBARJu3QW0U";
 
   const startAdd = () => {
     setEditing(null);
@@ -64,7 +68,6 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
     setOpen(true);
   };
 
-  // Handle file input
   const handleFileChange = (e) => {
     setSelectedImage(e.target.files[0]);
   };
@@ -84,11 +87,9 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
     }
   }, [open]);
 
-  // Upload to IPFS and mint tokens
   const uploadToIPFSAndMint = async () => {
     try {
       setIsUploading(true);
-
       if (
         !form.name ||
         !form.type ||
@@ -102,7 +103,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
 
       let imageCid = null;
 
-      // Step 1: Upload image first (if provided)
+      // Step 1: Upload image
       if (selectedImage) {
         const imgData = new FormData();
         imgData.append("file", selectedImage);
@@ -110,18 +111,15 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
 
         const imgUpload = await fetch("https://uploads.pinata.cloud/v3/files", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${JWT}`,
-          },
+          headers: { Authorization: `Bearer ${JWT}` },
           body: imgData,
         });
 
         const imgRes = await imgUpload.json();
-        console.log("Image upload response:", imgRes);
         imageCid = imgRes?.data?.cid || null;
       }
 
-      // Step 2: Build JSON metadata including image CID and produce details
+      // Step 2: Build metadata
       const metadata = {
         name: form.name,
         type: form.type,
@@ -130,76 +128,49 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
         locality: form.locality,
         certificate: form.certificate || null,
         image: imageCid ? `ipfs://${imageCid}` : null,
-        farmId: `FARM_${crypto.randomUUID()}`, // Generate unique farm ID
+        farmId: `FARM_${crypto.randomUUID()}`,
         createdAt: new Date().toISOString(),
       };
 
-      // Generate unique filename: farmId + timestamp
       const fileName = `${metadata.farmId}_${Date.now()}.json`;
-
       const blob = new Blob([JSON.stringify(metadata, null, 2)], {
         type: "application/json",
       });
-      const jsonFile = new File([blob], fileName, {
-        type: "application/json",
-      });
+      const jsonFile = new File([blob], fileName, { type: "application/json" });
 
       const jsonData = new FormData();
       jsonData.append("file", jsonFile);
       jsonData.append("network", "public");
 
-      // Step 3: Upload JSON metadata to IPFS
+      // Step 3: Upload JSON metadata
       const request = await fetch("https://uploads.pinata.cloud/v3/files", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${JWT}`,
-        },
+        headers: { Authorization: `Bearer ${JWT}` },
         body: jsonData,
       });
 
       const response = await request.json();
-      console.log("Metadata upload response:", response);
-
       const metadataCid = response?.data?.cid;
-      if (!metadataCid) {
-        throw new Error("Failed to get metadata CID from IPFS upload");
-      }
+      if (!metadataCid) throw new Error("Failed to upload metadata");
 
-      // Step 4: Mint tokens with the metadata CID as URI
+      // Step 4: Mint tokens
       const tokenURI = `ipfs://${metadataCid}`;
-      const mintAmount = form.quantity; // Use quantity as the amount of tokens to mint
-
-      console.log("Minting tokens with:", {
-        amount: mintAmount,
-        uri: tokenURI,
-      });
+      const mintAmount = form.quantity;
       await mint(mintAmount, tokenURI);
       await handleGetTokens();
-      // Step 5: Update local state with the new produce item
+
       const newProduceItem = {
         ...form,
         id: crypto.randomUUID(),
         ipfsCid: metadataCid,
-        tokenURI: tokenURI,
-        imageCid: imageCid,
+        tokenURI,
+        imageCid,
       };
 
-      if (editing) {
-        onUpdate(newProduceItem);
-      } else {
-        onAdd(newProduceItem);
-      }
+      if (editing) onUpdate(newProduceItem);
+      else onAdd(newProduceItem);
 
-      // Step 6: Refresh user tokens
-      try {
-        await handleGetTokens();
-      } catch (error) {
-        console.log("Note: Could not refresh user tokens:", error);
-      }
-
-      alert(
-        `Success! Metadata uploaded to IPFS (CID: ${metadataCid}) and ${mintAmount} tokens minted!`
-      );
+      alert(`Success! Metadata uploaded & ${mintAmount} tokens minted!`);
       setOpen(false);
     } catch (error) {
       console.error("Upload and mint error:", error);
@@ -211,11 +182,9 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
 
   const submit = () => {
     if (editing && !selectedImage) {
-      // For editing without new image, just update locally
       onUpdate(form);
       setOpen(false);
     } else {
-      // For new items or editing with new image, upload to IPFS and mint
       uploadToIPFSAndMint();
     }
   };
@@ -223,22 +192,24 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
   const handleDeleteToken = async (tokenId, quantity) => {
     if (
       !window.confirm(
-        `Are you sure you want to delete token ID ${tokenId} and burn ${quantity} tokens? This action cannot be undone.`
+        `Delete token ID ${tokenId} and burn ${quantity} tokens?`
       )
-    ) {
+    )
       return;
-    }
     try {
       await deleteFromMemory(quantity, tokenId);
       onDelete(tokenId);
-      alert(
-        `Token ID ${tokenId} deleted and ${quantity} tokens burned successfully.`
-      );
-      handleGetTokens(); // Refresh token list
+      alert(`Token ${tokenId} deleted successfully.`);
+      handleGetTokens();
     } catch (error) {
       console.error("Delete token error:", error);
       alert(`Error deleting token: ${error.message}`);
     }
+  };
+
+  const handleShowQR = (t) => {
+    setQrToken(t);
+    setQrOpen(true);
   };
 
   const totalSkus = produce.length;
@@ -249,6 +220,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
 
   return (
     <div>
+      {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">My Produce</h2>
@@ -256,98 +228,70 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
             Manage your listed items and certificates.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={startAdd}
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            Add Produce
-          </Button>
-        </div>
+        <Button
+          onClick={startAdd}
+          className="bg-emerald-600 hover:bg-emerald-700"
+        >
+          Add Produce
+        </Button>
       </div>
 
+      {/* Stats */}
       <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat label="Items" value={totalSkus.toString()} />
         <Stat label="Total Quantity" value={totalQty.toString()} />
-        <Stat
-          label="Avg. Base Price"
-          value={`₹${avgBase(produce).toFixed(2)}`}
-        />
+        <Stat label="Avg. Base Price" value={`₹${avgBase(produce).toFixed(2)}`} />
         <Stat
           label="Certificates"
           value={`${produce.filter((p) => !!p.certificate).length}`}
         />
       </div>
 
+      {/* Views */}
       <Tabs defaultValue="cards" className="mt-6">
         <TabsList className="flex gap-4 bg-emerald-50/50 p-2 rounded-xl">
-          <TabsTrigger
-            value="cards"
-            className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 transition"
-          >
-            Card View
-          </TabsTrigger>
-          <TabsTrigger
-            value="table"
-            className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 transition"
-          >
-            Table View
-          </TabsTrigger>
+          <TabsTrigger value="cards">Card View</TabsTrigger>
+          <TabsTrigger value="table">Table View</TabsTrigger>
         </TabsList>
 
         {/* Card View */}
         <TabsContent value="cards" className="mt-6">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {tokens?.map((t, idx) => (
-              <Card
-                key={idx}
-                className="bg-white/70 backdrop-blur-md border border-emerald-100 shadow-md hover:shadow-lg transition rounded-2xl"
-              >
+              <Card key={idx} className="rounded-2xl shadow-md">
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-lg font-semibold text-gray-800">
+                  <CardTitle className="flex justify-between">
                     <span>{t.name}</span>
-                    <Badge
-                      variant="outline"
-                      className="border-emerald-600 text-emerald-700 font-medium"
-                    >
-                      Token
-                    </Badge>
+                    <Badge variant="outline">Token</Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid gap-2 text-sm font-sans text-gray-700">
+                <CardContent>
                   <img
                     src={t.image}
                     alt={t.name}
-                    className="w-full h-32 object-cover rounded-lg border border-emerald-100 shadow-sm"
+                    className="w-full h-32 object-cover rounded-lg border"
                   />
-                  <div>ID: <span className="font-medium">{t.id.toString()}</span></div>
-                  <div>Quantity: <span className="font-medium">{t.balance}</span></div>
+                  <div>ID: {t.id.toString()}</div>
+                  <div>Quantity: {t.balance}</div>
                   <div>Locality: {t.metadata?.locality}</div>
                   <div>Type: {t.metadata?.type}</div>
-                  <p className="text-gray-600 italic">{t.description}</p>
+                  <p className="text-gray-600">{t.description}</p>
                 </CardContent>
-                <CardFooter className="flex items-center justify-between gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => console.log("Edit", t)}
-                    className="rounded-lg"
-                  >
+                <CardFooter className="flex justify-between">
+                  <Button size="sm" variant="outline" onClick={() => startEdit(t)}>
                     Edit
                   </Button>
                   <Button
-                    variant="secondary"
                     size="sm"
-                    onClick={() => console.log("QR", t)}
-                    className="bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg"
+                    className="bg-emerald-600 text-white"
+                    onClick={() => handleShowQR(t)}
                   >
                     Show QR
                   </Button>
                   <Button
-                    variant="destructive"
                     size="sm"
+                    variant="destructive"
                     onClick={() => handleDeleteToken(t.id, t.balance)}
-                    className="rounded-lg"
                   >
                     Delete
                   </Button>
@@ -359,11 +303,11 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
 
         {/* Table View */}
         <TabsContent value="table" className="mt-6">
-          <div className="overflow-x-auto border border-emerald-100 rounded-xl shadow-sm">
+          <div className="overflow-x-auto border rounded-xl">
             <Table>
               <TableHeader className="bg-emerald-50">
                 <TableRow>
-                  <TableHead className="font-semibold text-gray-700">Name</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>ID</TableHead>
                   <TableHead>Quantity</TableHead>
                   <TableHead>Locality</TableHead>
@@ -374,30 +318,22 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
               </TableHeader>
               <TableBody>
                 {tokens?.map((t, idx) => (
-                  <TableRow key={idx} className="hover:bg-emerald-50/40">
-                    <TableCell className="font-medium">{t.name}</TableCell>
+                  <TableRow key={idx}>
+                    <TableCell>{t.name}</TableCell>
                     <TableCell>{t.id.toString()}</TableCell>
                     <TableCell>{t.balance}</TableCell>
                     <TableCell>{t.metadata?.locality}</TableCell>
                     <TableCell>{t.metadata?.type}</TableCell>
-                    <TableCell className="max-w-[250px] truncate text-gray-600">
-                      {t.description}
-                    </TableCell>
+                    <TableCell>{t.description}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => console.log("Edit", t)}
-                          className="rounded-lg"
-                        >
+                        <Button size="sm" variant="outline" onClick={() => startEdit(t)}>
                           Edit
                         </Button>
                         <Button
                           size="sm"
-                          variant="secondary"
-                          onClick={() => console.log("QR", t)}
-                          className="bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg"
+                          className="bg-emerald-600 text-white"
+                          onClick={() => handleShowQR(t)}
                         >
                           Show QR
                         </Button>
@@ -405,7 +341,6 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                           size="sm"
                           variant="destructive"
                           onClick={() => handleDeleteToken(t.id, t.balance)}
-                          className="rounded-lg"
                         >
                           Delete
                         </Button>
@@ -419,11 +354,36 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
         </TabsContent>
       </Tabs>
 
+      {/* QR Code Dialog */}
+      <Dialog open={qrOpen} onOpenChange={setQrOpen}>
+        <DialogContent className="flex flex-col items-center gap-4">
+          <DialogHeader>
+            <DialogTitle>Product QR Code</DialogTitle>
+          </DialogHeader>
+          {qrToken && (
+            <>
+              <QRCodeSVG
+                value={`http://localhost:5173/#/product/${qrToken.id.toString()}`}
+                size={220}
+                level="H"
+                includeMargin
+              />
+              <p className="text-sm text-gray-600">
+                Scan to view {qrToken.name}
+              </p>
+            </>
+          )}
+          <Button
+            onClick={() => setQrOpen(false)}
+            className="bg-emerald-600 text-white"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
 
+      {/* Add/Edit Produce Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <span className="sr-only">Open Produce Dialog</span>
-        </DialogTrigger>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
@@ -438,7 +398,6 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                   setForm((f) => ({ ...f, name: e.target.value }))
                 }
                 placeholder="Tomatoes"
-                required
               />
             </LabeledInput>
             <LabeledInput label="Type *">
@@ -449,7 +408,6 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                   setForm((f) => ({ ...f, type: e.target.value }))
                 }
                 placeholder="Vegetable"
-                required
               />
               <datalist id="produce-types">
                 {produceTypes.map((t) => (
@@ -460,25 +418,19 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
             <LabeledInput label="Quantity (kg) *">
               <Input
                 type="number"
-                min={0}
                 value={form.quantity}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, quantity: Number(e.target.value) }))
                 }
-                placeholder="100"
-                required
               />
             </LabeledInput>
             <LabeledInput label="Base Price (₹/kg) *">
               <Input
                 type="number"
-                min={0}
                 value={form.basePrice}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, basePrice: Number(e.target.value) }))
                 }
-                placeholder="25"
-                required
               />
             </LabeledInput>
             <LabeledInput label="Locality *">
@@ -487,11 +439,9 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, locality: e.target.value }))
                 }
-                placeholder="Nashik, MH"
-                required
               />
             </LabeledInput>
-            <LabeledInput label="Quality Certificate URL (optional)">
+            <LabeledInput label="Certificate URL">
               <Input
                 value={form.certificate || ""}
                 onChange={(e) =>
@@ -500,7 +450,6 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                     certificate: e.target.value || undefined,
                   }))
                 }
-                placeholder="https://gateway/your-cert"
               />
             </LabeledInput>
             <LabeledInput label="Produce Image">
@@ -508,30 +457,20 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
               />
-              {selectedImage && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Selected: {selectedImage.name}
-                </p>
-              )}
             </LabeledInput>
           </div>
           <div className="mt-4 flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isUploading}
-            >
+            <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-emerald-600 text-white"
               onClick={submit}
               disabled={isUploading}
             >
               {isUploading
-                ? "Uploading & Minting..."
+                ? "Uploading..."
                 : editing
                 ? "Save Changes"
                 : "Add & Mint Tokens"}
@@ -545,7 +484,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
 
 function Stat({ label, value }) {
   return (
-    <Card className="bg-background/60 backdrop-blur">
+    <Card>
       <CardContent className="p-4">
         <div className="text-xs text-muted-foreground">{label}</div>
         <div className="mt-1 text-xl font-semibold">{value}</div>
