@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Camera, Upload, X } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
+import QrScanner from "qr-scanner";
 
 export default function ScanModal({ isVisible, onClose, onScan }) {
   const [mode, setMode] = useState(null); // "camera" or "upload"
   const cameraRef = useRef(null);
   const scannerRef = useRef(null);
+  const [result, setResult] = useState("");
 
   useEffect(() => {
     if (mode === "camera") {
@@ -14,7 +16,7 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
 
       scannerRef.current
         .start({ facingMode: "environment" }, config, (decodedText) => {
-          onScan(decodedText); // Pass scanned QR value back
+          onScan(decodedText); 
           stopScanner();
         })
         .catch((err) => console.error("Camera error:", err));
@@ -30,37 +32,23 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
       scannerRef.current = null;
     }
   };
-
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    const tempId = `upload-preview-${Date.now()}`;
-    const tempDiv = document.createElement("div");
-    tempDiv.id = tempId;
-    tempDiv.style.display = "none";
-    document.body.appendChild(tempDiv);
-
-    const html5QrCode = new Html5Qrcode(tempId);
-
     try {
-      const decodedText = await html5QrCode.scanFile(file, true);
-      if (decodedText) {
-        onScan(decodedText);
-        onClose();
+      const qrResult = await QrScanner.scanImage(file, {
+        returnDetailedScanResult: true,
+      });
+      if (qrResult?.data) {
+        // Redirect immediately
+        window.location.href = qrResult.data;
       } else {
-        alert("No QR code found in this image.");
+        alert("❌ No QR code found in this image.");
       }
     } catch (err) {
       console.error("QR scan error:", err);
-      alert("No QR code found in this image.");
-    } finally {
-      try {
-        await html5QrCode.clear();
-      } catch (e) {
-        console.error("Failed to clear Html5Qrcode instance:", e);
-      }
-      document.body.removeChild(tempDiv);
+      alert("❌ No QR code found in this image.");
     }
   };
 
@@ -70,7 +58,9 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl relative">
         <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-xl font-bold text-gray-900">Choose Scan Method</h3>
+          <h3 className="text-xl font-bold text-gray-900">
+            Choose Scan Method
+          </h3>
           <button
             onClick={() => {
               stopScanner();
@@ -108,7 +98,10 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
 
           {mode === "camera" && (
             <div>
-              <div id="camera-preview" className="w-full h-64 bg-gray-200 rounded-lg"></div>
+              <div
+                id="camera-preview"
+                className="w-full h-64 bg-gray-200 rounded-lg"
+              ></div>
               <button
                 onClick={() => setMode(null)}
                 className="mt-4 w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
@@ -121,7 +114,9 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
 
         <div className="px-6 pb-6">
           <p className="text-sm text-gray-500 text-center">
-            {mode ? "Scanning for QR code..." : "Choose how you'd like to scan the QR code"}
+            {mode
+              ? "Scanning for QR code..."
+              : "Choose how you'd like to scan the QR code"}
           </p>
         </div>
       </div>

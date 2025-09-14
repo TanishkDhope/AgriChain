@@ -2,105 +2,61 @@ import React, { useState, useEffect } from "react";
 import { getProductData } from "../lib/data";
 
 export default function ProductDetails({ batchId = "LOT12345", isLoading = false }) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [images, setImages] = useState([]);
-  const [imageLoadingStates, setImageLoadingStates] = useState({});
+  const [image, setImage] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   useEffect(() => {
-    const loadProductData = async () => {
-      setIsDataLoading(true);
-      const productData = getProductData(batchId);
-      const productImages =
-        productData.gallery?.length > 0 ? productData.gallery : [productData.image];
+  const loadProductData = async () => {
+    setIsDataLoading(true);
+    const productData = getProductData(batchId);
 
-      setImages(productImages);
-      setCurrentImageIndex(0);
+    // explicitly pick the 2nd image in gallery if it exists
+    const productImage =
+      productData.gallery?.[1] || productData.image || productData.gallery?.[0] || null;
 
-      const initialLoadingStates = {};
-      productImages.forEach((_, index) => {
-        initialLoadingStates[index] = true;
-      });
-      setImageLoadingStates(initialLoadingStates);
-      setIsDataLoading(false);
-    };
-
-    loadProductData();
-  }, [batchId]);
-
-  useEffect(() => {
-    if (images.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [images.length]);
-
-  const handleImageLoad = (index) => {
-    setImageLoadingStates((prev) => ({
-      ...prev,
-      [index]: false,
-    }));
+    setImage(productImage);
+    setIsImageLoading(true);
+    setIsDataLoading(false);
   };
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
+  loadProductData();
+}, [batchId]);
 
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
 
-  if (isDataLoading || images.length === 0 || isLoading) {
+  if (isDataLoading || isLoading) {
     return <div className="p-8 text-center text-gray-500">Loading product...</div>;
   }
 
   const productData = getProductData(batchId);
   const { name, farm, info, certification } = productData;
-  const hasMultipleImages = images.length > 1;
-  const currentImageLoading = imageLoadingStates[currentImageIndex];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start p-6">
-      {/* Left: Product Gallery */}
+      {/* Left: Single Product Image */}
       <div className="relative aspect-square rounded-3xl overflow-hidden shadow-xl bg-white">
-        {currentImageLoading && (
+        {isImageLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
 
-        <img
-          src={images[currentImageIndex]}
-          className={`w-full h-full object-cover transition-all duration-700 ${
-            currentImageLoading ? "opacity-0" : "opacity-100"
-          }`}
-          onLoad={() => handleImageLoad(currentImageIndex)}
-          alt={`Product image ${currentImageIndex + 1}`}
-        />
-
-        {/* Prev/Next buttons */}
-        {hasMultipleImages && !currentImageLoading && (
-          <>
-            <button
-              onClick={prevImage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:scale-110 transition"
-            >
-              ‹
-            </button>
-            <button
-              onClick={nextImage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center hover:scale-110 transition"
-            >
-              ›
-            </button>
-          </>
+        {image && (
+          <img
+            src={image}
+            className={`w-full h-full object-cover transition-all duration-700 ${
+              isImageLoading ? "opacity-0" : "opacity-100"
+            }`}
+            onLoad={() => setIsImageLoading(false)}
+            onError={() => setIsImageLoading(false)}
+            alt="Product"
+          />
         )}
       </div>
 
-      {/* Right: Details */}
+      {/* Right: Product Details */}
       <div className="space-y-6">
-        {/* Product Header */}
+        {/* Header */}
         <div className="bg-white p-6 rounded-xl shadow-lg">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Premium Organic {name}

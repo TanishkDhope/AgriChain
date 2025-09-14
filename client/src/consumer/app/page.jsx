@@ -25,6 +25,7 @@ export default function ConsumerHomePage() {
 
   // ✅ Updated to handle real QR scan result
   const handleScan = (decodedText) => {
+    window.location.href = decodedText; // Redirect immediately
     setShowScanModal(false);
     setIsScanning(true);
 
