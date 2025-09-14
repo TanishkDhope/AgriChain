@@ -278,6 +278,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
           value={`${produce.filter((p) => !!p.certificate).length}`}
         />
       </div>
+      
       <Tabs defaultValue="cards" className="mt-6">
         <TabsList>
           <TabsTrigger value="cards">Card View</TabsTrigger>

@@ -4,11 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import Footer from "../components/Footer.jsx";
-import ProductInfo from "../components/ProductInfo.jsx";
+import ProductDetails from "../components/ProductDetails.jsx";
 import Timeline from "../components/Timeline.jsx";
 import Reviews from "../components/Reviews.jsx";
 import Actions from "../components/Actions.jsx";
-import ProductGallery from "../components/ProductGallery.jsx";
 import Notification from "../components/Notification.jsx";
 import {
   productData,
@@ -25,8 +24,6 @@ export default function ProductPage({ onLogout }) {
 
   const [showQR, setShowQR] = useState(false);
   const [notification, setNotification] = useState("");
-  const [isGallerySticky, setIsGallerySticky] = useState(true);
-
   const [currentProduct, setCurrentProduct] = useState(productData);
   const [currentTimeline, setCurrentTimeline] = useState(timelineData);
   const [currentReviews, setCurrentReviews] = useState(reviewsData);
@@ -65,19 +62,6 @@ export default function ProductPage({ onLogout }) {
     if (onLogout) onLogout();
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const actionsSection = document.getElementById("actions-section");
-      if (actionsSection) {
-        const rect = actionsSection.getBoundingClientRect();
-        setIsGallerySticky(rect.bottom > 100);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50 flex items-center justify-center">
@@ -99,42 +83,31 @@ export default function ProductPage({ onLogout }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50">
-      <Header 
+      <Header
         onLogout={handleLogoutWithNotification}
         batchId={batchId}
         showBackButton={!!batchId}
       />
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
-          <div className="xl:col-span-2">
-            <div
-              className={`${
-                isGallerySticky ? "sticky top-28" : "relative"
-              } transition-all duration-300`}
-            >
-              <ProductGallery product={currentProduct} batchId={batchId} />
-            </div>
-          </div>
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-10">
+        {/* Product Details (now handles left image + right details internally) */}
+        <ProductDetails
+          product={currentProduct}
+          batchId={batchId}
+          productName={productName}
+        />
 
-          <div className="xl:col-span-3 space-y-6">
-            <ProductInfo
-              product={currentProduct}
-              batchId={batchId}
-              productName={productName}
-            />
-
-            <div id="actions-section" className="pt-4">
-              <Actions
-                showQR={showQR}
-                setShowQR={setShowQR}
-                batchId={batchId}
-                product={currentProduct}
-              />
-            </div>
-          </div>
+        {/* Actions Section */}
+        <div id="actions-section" className="pt-4">
+          <Actions
+            showQR={showQR}
+            setShowQR={setShowQR}
+            batchId={batchId}
+            product={currentProduct}
+          />
         </div>
 
+        {/* Timeline + Reviews */}
         <div className="mt-16 space-y-16">
           <div className="border-t border-gray-200 pt-16">
             <Timeline data={currentTimeline} batchId={batchId} />
