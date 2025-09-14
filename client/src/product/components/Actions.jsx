@@ -1,6 +1,5 @@
 import React, { useState,useEffect,useContext } from "react";
 import {
-  QrCode,
   Share2,
   Shield,
   AlertTriangle,
@@ -9,7 +8,7 @@ import {
 } from "lucide-react";
 import { socketContext } from "../../contexts/socketContext.jsx";
 
-export default function Actions({ showQR, setShowQR, batchId, product }) {
+export default function Actions({ batchId, product }) {
   const [copied, setCopied] = useState(false);
   const [reportStatus, setReportStatus] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -17,12 +16,10 @@ export default function Actions({ showQR, setShowQR, batchId, product }) {
 
   const handleShareLink = async () => {
     try {
-      // Simple URL copy to clipboard
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      // Fallback for older browsers
       const textArea = document.createElement("textarea");
       textArea.value = window.location.href;
       document.body.appendChild(textArea);
@@ -86,12 +83,12 @@ export default function Actions({ showQR, setShowQR, batchId, product }) {
     <div className="p-6 space-y-6">
       {/* Primary Action Buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Buy Button (replaces Show QR Code) */}
         <button
-          onClick={() => setShowQR(!showQR)}
-          className="flex items-center justify-center px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
+          onClick={() => alert(`🛒 Buying ${product?.name || "Product"}...`)}
+          className="flex items-center justify-center px-5 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
         >
-          <QrCode className="w-5 h-5 mr-2" />
-          {showQR ? "Hide QR Code" : "Show QR Code"}
+          Buy Now
         </button>
 
         <button
@@ -170,27 +167,6 @@ export default function Actions({ showQR, setShowQR, batchId, product }) {
                 Thank you for helping maintain supply chain integrity.
               </p>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* QR Code Display */}
-      {showQR && (
-        <div className="mt-6 p-6 border-2 border-dashed border-green-300 rounded-2xl text-center bg-gradient-to-br from-green-50 to-emerald-50 animate-in slide-in-from-top-4">
-          {/* QR Code Visual */}
-          <div className="w-36 h-36 mx-auto mb-4 bg-white border-4 border-green-300 rounded-xl flex items-center justify-center shadow-lg">
-            <QrCode className="w-20 h-20 text-green-500" />
-          </div>
-
-          {/* Generation Info */}
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-blue-800 text-xs font-medium">
-              🔐 This QR code contains encrypted product data for blockchain
-              verification
-            </p>
-            <p className="text-blue-600 text-xs mt-1">
-              Generated: {new Date().toLocaleString()}
-            </p>
           </div>
         </div>
       )}

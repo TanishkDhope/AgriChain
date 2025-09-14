@@ -125,40 +125,6 @@ export default function ProductInfo({ product, isLoading = false }) {
         </div>
       </div>
 
-      {/* Fair Price Indicator */}
-      <div className="bg-green-50 p-4 rounded-lg border border-green-200 animate-in slide-in-from-top-2">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-bold text-green-800">Fair Price Indicator</h3>
-          <div className="text-right">
-            <div className="text-green-700 text-sm">
-              Farmer: <span className="font-bold">₹{fairPrice.farmer}</span>
-            </div>
-            <div className="text-green-700 text-sm">
-              Retail: <span className="font-bold">₹{fairPrice.retail}</span>
-            </div>
-          </div>
-        </div>
-        <div className="mb-2 text-green-700 text-xs">
-          Farmer receives {farmerSharePercentage}% of retail price
-        </div>
-        <div className="w-full bg-green-200 rounded-full h-2">
-          <div 
-            className="bg-green-600 h-2 rounded-full transition-all duration-1000 ease-out"
-            style={{ width: `${farmerSharePercentage}%` }}
-          />
-        </div>
-        {/* Fair Trade Indicator */}
-        <div className="mt-2 flex items-center justify-between text-xs">
-          <span className="text-green-600">
-            {farmerSharePercentage >= 60 ? "🟢 Excellent" : 
-             farmerSharePercentage >= 40 ? "🟡 Fair" : "🔴 Needs Improvement"}
-          </span>
-          <span className="text-green-600 font-medium">
-            Fair Trade Score: {farmerSharePercentage}%
-          </span>
-        </div>
-      </div>
-
       {/* Product Information */}
       <div className="bg-white rounded-lg shadow-lg overflow-hidden animate-in slide-in-from-top-3">
         <div className="bg-blue-50 px-4 py-3 border-b">
