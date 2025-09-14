@@ -13,6 +13,7 @@ import Footer from "../components/Footer";
 import { initialProduce } from "../lib/data"
 import { gsap } from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import Chatbot from "../../consumer/app/Chatbot.jsx"
 
 export default function FarmerPage({ onLogout }) {
   const [produce, setProduce] = useState(initialProduce)
@@ -176,7 +177,7 @@ export default function FarmerPage({ onLogout }) {
           onLogout={handleLogout}
         />
       </section> */}
-      
+      <Chatbot/>
       <Footer />
 
       {/* Profile Modal */}
