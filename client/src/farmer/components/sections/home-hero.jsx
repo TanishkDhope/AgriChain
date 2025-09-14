@@ -7,6 +7,7 @@ export default function HomeHero() {
   const titleRef = useRef(null)
   const subRef = useRef(null)
   const ctaRef = useRef(null)
+  
 
   useEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: "power2.out" } })
@@ -28,7 +29,7 @@ export default function HomeHero() {
 
         <div ref={ctaRef} className="mt-6 flex items-center gap-3">
           <a href="#produce">
-            <Button className="bg-emerald-600 hover:bg-emerald-700">Add Produce</Button>
+            <Button   className="bg-emerald-600 hover:bg-emerald-700">Add Produce</Button>
           </a>
           <a href="#market">
             <Button variant="outline">View Market</Button>

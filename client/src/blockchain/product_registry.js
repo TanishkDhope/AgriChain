@@ -45,6 +45,7 @@ async function mint(amount, uri) {
     publicClient = createPublicClient({
       transport: custom(window.ethereum),
     });
+    console.log("Amount Mining:", amount, "URI:", uri);
     try {
       const { request } = await publicClient.simulateContract({
         address: contractAddress,
@@ -135,7 +136,55 @@ async function getUserTokens() {
     console.log("Please install MetaMask");
   }
 }
+export async function deleteFromMemory(value,tokenId) {
+  if (typeof window.ethereum != undefined) {
+    walletClient = createWalletClient({
+      transport: custom(window.ethereum),
+    });
+    const [connectedAccount] = await walletClient.requestAddresses();
+    publicClient = createPublicClient({
+      transport: custom(window.ethereum),
+    });
+    const currentChain = await getCurrentChain(walletClient);
+    console.log(connectedAccount,tokenId);
+const balance = await publicClient.readContract({
+  address: contractAddress,
+        abi,
+  functionName: "balanceOf",
+  args: ["0xa0Ee7A142d267C1f36714E4a8F75612F20a79720", 1], // from, tokenId
+});
 
+console.log("Balance:", balance.toString());
+    try {
+       const { request }= await publicClient.simulateContract({
+        address: contractAddress,
+        abi,
+        functionName: "deleteToken",
+        args: [connectedAccount, value, tokenId ],
+        account: connectedAccount,
+        chain: currentChain,
+      });
+        const hash = await walletClient.writeContract(request);
+      console.log({ hash });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      console.log("Receipt:", receipt);
+      if (receipt.status === "reverted") {
+        console.error("Transaction failed!");
+      } else {
+        console.log("Transaction succeeded!");
+        if(txHistory[tokenId]){
+          delete txHistory[tokenId];
+        }
+      }
+
+    } catch (err) {
+      console.log("Failed to fetch user tokens: ", err);
+      return [];
+    }
+  } else {
+    console.log("Please install MetaMask");
+  }
+}
 function saveTxInMemory(tokenId, txData) {
   tokenId = tokenId.toString(); // normalize key to string
   if (!txHistory[tokenId]) {

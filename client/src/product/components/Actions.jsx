@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect,useContext } from "react";
 import {
   QrCode,
   Share2,
@@ -7,11 +7,13 @@ import {
   Check,
   RefreshCw,
 } from "lucide-react";
+import { socketContext } from "../../contexts/socketContext.jsx";
 
 export default function Actions({ showQR, setShowQR, batchId, product }) {
   const [copied, setCopied] = useState(false);
   const [reportStatus, setReportStatus] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
+ const { socket, setSocket } = useContext(socketContext);
 
   const handleShareLink = async () => {
     try {
@@ -140,6 +142,10 @@ export default function Actions({ showQR, setShowQR, batchId, product }) {
             ? "Reporting..."
             : "Report Fraud"}
         </button>
+        <button
+          onClick={() => setShowQR(!showQR)}
+          className="flex items-center justify-center px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
+        >Buy Product</button>
       </div>
 
       {/* Report Success Message */}
