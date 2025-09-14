@@ -11,6 +11,8 @@ export default function Actions({ batchId, product }) {
   const [account, setAccount] = useState(null);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [currency, setCurrency] = useState("INR");
+  const [receiptId, setReceiptId] = useState("order_receipt_123");
 
   const { socket, setSocket } = useContext(socketContext);
   // Step 1: Create socket only once
@@ -54,8 +56,6 @@ export default function Actions({ batchId, product }) {
       // Further logic like notifying user can be added here
     };
 
-    socket.on("new_request", handleNewRequest);
-
     socket.on("accept_request", handleAcceptRequest);
 
     socket.on("payment_success", (data) => {
@@ -67,6 +67,7 @@ export default function Actions({ batchId, product }) {
       socket.disconnect();
     };
   }, [socket]); // runs again when socket is set
+
   const handleShareLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -100,8 +101,6 @@ export default function Actions({ batchId, product }) {
     }, 2500);
   };
 
-    
-
   const handleReportFraud = () => {
     const confirmed = window.confirm(
       `⚠️ Report Fraud Alert\n\nYou are about to report:\n📦 Product: ${
@@ -133,7 +132,126 @@ export default function Actions({ batchId, product }) {
       }, 2000);
     }
   };
-const handleRequest = () => {
+  // Handle payment process
+  const handlePayment = async (
+    price,
+    farmerAddress,
+    tokenId,
+    amountToken,
+    account
+  ) => {
+    console.log("Initiating payment of:", price);
+    console.log("To farmer:", farmerAddress);
+    console.log("For token ID:", tokenId);
+    console.log("Amount of tokens:", amountToken);
+    console.log("From buyer:", account);
+    const res = await loadRazorpayScript(
+      "https://checkout.razorpay.com/v1/checkout.js"
+    );
+    let amt = price;
+
+    try {
+      // Create order on your server
+      const response = await fetch("http://localhost:5001/order", {
+        method: "POST",
+        body: JSON.stringify({
+          amount: amt * 100, // Convert to paisa
+          currency,
+          receipt: receiptId,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const order = await response.json();
+      console.log("Order received from server:", order);
+
+      // Razorpay payment options
+      const options = {
+        key: "rzp_test_RGjCX8nf1NHre5",
+        amount: amt * 100,
+        currency,
+        name: "Acme Corp",
+        description: "Wallet Recharge",
+        image: "https://example.com/your_logo",
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            const validateRes = await fetch(
+              "http://localhost:5001/order/validate",
+              {
+                method: "POST",
+                body: JSON.stringify(response),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            const validate = await validateRes.json();
+            if (validate.msg === "Payment Successful") {
+              //send success message to seller and initiate token transfer from seller
+              console.log("Payment verified successfully");
+              socket.emit("payment_success", {
+                buyer: account,
+                tokenId,
+                amountToken,
+                farmer: farmerAddress,
+              });
+
+              if (updateResponse.status === 200) {
+                console.log("Amount added to wallet successfully!", "success");
+              } else {
+                console.log("Error updating wallet.", "error");
+              }
+            } else {
+              console.log("Payment verification failed.", "error");
+            }
+          } catch (error) {
+            console.log("An error occurred while processing payment.", "error");
+          }
+        },
+        prefill: {
+          name: "John Doe",
+          email: "wagvah",
+          contact: "999999999",
+        },
+        theme: {
+          color: "#4F46E5",
+        },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on("payment.failed", function (response) {
+        console.error("Payment failed:", response);
+      });
+      rzp1.open();
+    } catch (error) {
+      console.error("Error initiating payment:", error);
+      console.log("An error occurred while processing the payment.", "error");
+    }
+  };
+  function loadRazorpayScript(src) {
+    return new Promise((resolve) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  }
+
+  const handleRequest = () => {
     socket.emit("buy_request", {
       buyer: account,
       farmer: "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
@@ -251,11 +369,8 @@ const handleRequest = () => {
                   alert("Please connect your wallet first.");
                   return;
                 }
-                handleRequest()
+                handleRequest();
                 setShowBuyModal(false);
-                alert(
-                  `🛒 Request sent to farmer for ${quantity} units of ${product?.name}`
-                );
               }}
               className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg"
             >

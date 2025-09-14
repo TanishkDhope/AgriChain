@@ -1,13 +1,78 @@
-import React, { useEffect, useRef } from "react"
+import React, { useEffect, useRef,useContext } from "react"
 import { Button } from "../../../components/ui/button"
 import { Card, CardContent } from "../../../components/ui/card"
 import { gsap } from "gsap"
+import { socketContext } from "../../../contexts/socketContext"
+import { io } from "socket.io-client";
+import { connect } from "../../../blockchain/product_registry"
+
 
 export default function HomeHero() {
   const titleRef = useRef(null)
   const subRef = useRef(null)
   const ctaRef = useRef(null)
-  
+  const [account, setAccount] = React.useState(null);
+  const [requestData, setRequestData] = React.useState(null);
+const [showRequestModal, setShowRequestModal] = React.useState(false);
+const [price, setPrice] = React.useState("");
+
+
+
+   const { socket, setSocket } = useContext(socketContext);
+    // Step 1: Create socket only once
+    useEffect(() => {
+      if (!socket) {
+        const sock = io("http://localhost:5000");
+        setSocket(sock);
+      }
+    }, []);
+
+    // Step 2: Wait for socket to exist, then register account
+  useEffect(() => {
+    if (!socket) return; // wait until socket is set
+
+    const doConnect = async () => {
+      const acc = await connect(); // connect wallet
+      if (!acc) return;
+      setAccount(acc);
+      console.log("Socket is ready:", socket);
+      console.log("Account:", acc);
+      socket.emit("register", acc); // register with server
+    };
+
+    doConnect();
+    // Handle new requests
+    const handleNewRequest = (data) => {
+      console.log("New buy request received:", data);
+      setRequestData(data);
+       setShowRequestModal(true); 
+    };
+
+    const handleAcceptRequest = (data) => {
+      console.log("Your buy request was accepted:", data);
+      handlePayment(
+        data.price,
+        data.farmer,
+        data.tokenId,
+        data.amountToken,
+        data.buyer
+      );
+      // Further logic like notifying user can be added here
+    };
+
+    socket.on("new_request", handleNewRequest);
+
+    socket.on("accept_request", handleAcceptRequest);
+
+    socket.on("payment_success", (data) => {
+      console.log("Payment successful for token:", data.tokenId);
+      alert("Payment successful! Token transfer will be initiated.");
+    });
+    // optional cleanup if component unmounts
+    return () => {
+      socket.disconnect();
+    };
+  }, [socket]); // runs again when socket is set
 
   useEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: "power2.out" } })
@@ -57,6 +122,62 @@ export default function HomeHero() {
           </Card>
         </div>
       </div>
+      {showRequestModal && requestData && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md relative">
+      {/* Close button */}
+      <button
+        onClick={() => setShowRequestModal(false)}
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+      >
+        ✕
+      </button>
+
+      <h2 className="text-xl font-bold mb-4">New Buy Request</h2>
+
+      <div className="space-y-2 text-sm text-gray-700">
+        <p><strong>Buyer:</strong> {requestData.buyer}</p>
+        <p><strong>Batch ID:</strong> {requestData.tokenId}</p>
+        <p><strong>Quantity:</strong> {requestData.amountToken}</p>
+      </div>
+
+      {/* Price Input */}
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Enter Selling Price (₹)
+        </label>
+        <input
+          type="number"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          placeholder="e.g. 250"
+          className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      {/* Accept Button */}
+      <button
+        onClick={() => {
+          if (!price || price <= 0) {
+            alert("Please enter a valid price before accepting.");
+            return;
+          }
+          socket.emit("accept_request", {
+            ...requestData,
+            farmer: account,
+            price: Number(price),
+          });
+          setShowRequestModal(false);
+        }}
+        className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg"
+      >
+        Accept Request
+      </button>
+    </div>
+  </div>
+)}
+
+
     </div>
   )
 }
