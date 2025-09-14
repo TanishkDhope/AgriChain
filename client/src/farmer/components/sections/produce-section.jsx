@@ -278,66 +278,76 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
           value={`${produce.filter((p) => !!p.certificate).length}`}
         />
       </div>
-      
+
       <Tabs defaultValue="cards" className="mt-6">
-        <TabsList>
-          <TabsTrigger value="cards">Card View</TabsTrigger>
-          <TabsTrigger value="table">Table View</TabsTrigger>
+        <TabsList className="flex gap-4 bg-emerald-50/50 p-2 rounded-xl">
+          <TabsTrigger
+            value="cards"
+            className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 transition"
+          >
+            Card View
+          </TabsTrigger>
+          <TabsTrigger
+            value="table"
+            className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white rounded-lg px-4 py-2 transition"
+          >
+            Table View
+          </TabsTrigger>
         </TabsList>
 
         {/* Card View */}
-        <TabsContent value="cards" className="mt-4">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <TabsContent value="cards" className="mt-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {tokens?.map((t, idx) => (
               <Card
                 key={idx}
-                className="bg-background/60 backdrop-blur border-emerald-200/30 hover:shadow-sm transition"
+                className="bg-white/70 backdrop-blur-md border border-emerald-100 shadow-md hover:shadow-lg transition rounded-2xl"
               >
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
+                  <CardTitle className="flex items-center justify-between text-lg font-semibold text-gray-800">
                     <span>{t.name}</span>
                     <Badge
                       variant="outline"
-                      className="border-emerald-500 text-emerald-700"
+                      className="border-emerald-600 text-emerald-700 font-medium"
                     >
                       Token
                     </Badge>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid gap-2">
+                <CardContent className="grid gap-2 text-sm font-sans text-gray-700">
                   <img
                     src={t.image}
                     alt={t.name}
-                    className="w-full h-28 object-cover rounded-md border"
+                    className="w-full h-32 object-cover rounded-lg border border-emerald-100 shadow-sm"
                   />
-                  <div className="text-sm text-muted-foreground">
-                    ID: {t.id.toString()}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Quantity: {t.balance}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Locality: {t.metadata?.locality}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Type: {t.metadata?.type}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {t.description}
-                  </div>
+                  <div>ID: <span className="font-medium">{t.id.toString()}</span></div>
+                  <div>Quantity: <span className="font-medium">{t.balance}</span></div>
+                  <div>Locality: {t.metadata?.locality}</div>
+                  <div>Type: {t.metadata?.type}</div>
+                  <p className="text-gray-600 italic">{t.description}</p>
                 </CardContent>
-                <CardFooter className="flex items-center justify-between">
+                <CardFooter className="flex items-center justify-between gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => console.log("Edit", t)}
+                    className="rounded-lg"
                   >
                     Edit
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => console.log("QR", t)}
+                    className="bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg"
+                  >
+                    Show QR
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={() => handleDeleteToken(t.id, t.balance)}
+                    className="rounded-lg"
                   >
                     Delete
                   </Button>
@@ -348,12 +358,12 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
         </TabsContent>
 
         {/* Table View */}
-        <TabsContent value="table" className="mt-4">
-          <div className="overflow-x-auto">
+        <TabsContent value="table" className="mt-6">
+          <div className="overflow-x-auto border border-emerald-100 rounded-xl shadow-sm">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-emerald-50">
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Name</TableHead>
                   <TableHead>ID</TableHead>
                   <TableHead>Quantity</TableHead>
                   <TableHead>Locality</TableHead>
@@ -364,13 +374,13 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
               </TableHeader>
               <TableBody>
                 {tokens?.map((t, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{t.name}</TableCell>
+                  <TableRow key={idx} className="hover:bg-emerald-50/40">
+                    <TableCell className="font-medium">{t.name}</TableCell>
                     <TableCell>{t.id.toString()}</TableCell>
                     <TableCell>{t.balance}</TableCell>
                     <TableCell>{t.metadata?.locality}</TableCell>
                     <TableCell>{t.metadata?.type}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">
+                    <TableCell className="max-w-[250px] truncate text-gray-600">
                       {t.description}
                     </TableCell>
                     <TableCell className="text-right">
@@ -379,13 +389,23 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                           size="sm"
                           variant="outline"
                           onClick={() => console.log("Edit", t)}
+                          className="rounded-lg"
                         >
                           Edit
                         </Button>
                         <Button
                           size="sm"
+                          variant="secondary"
+                          onClick={() => console.log("QR", t)}
+                          className="bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg"
+                        >
+                          Show QR
+                        </Button>
+                        <Button
+                          size="sm"
                           variant="destructive"
                           onClick={() => handleDeleteToken(t.id, t.balance)}
+                          className="rounded-lg"
                         >
                           Delete
                         </Button>
@@ -398,6 +418,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
           </div>
         </TabsContent>
       </Tabs>
+
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
