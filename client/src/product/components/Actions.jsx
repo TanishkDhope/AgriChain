@@ -1,19 +1,72 @@
-import React, { useState,useEffect,useContext } from "react";
-import {
-  Share2,
-  Shield,
-  AlertTriangle,
-  Check,
-  RefreshCw,
-} from "lucide-react";
+import React, { useState, useEffect, useContext } from "react";
+import { Share2, Shield, AlertTriangle, Check, RefreshCw } from "lucide-react";
+import { connect } from "../../blockchain/product_registry.js";
 import { socketContext } from "../../contexts/socketContext.jsx";
+import { io } from "socket.io-client";
 
 export default function Actions({ batchId, product }) {
   const [copied, setCopied] = useState(false);
   const [reportStatus, setReportStatus] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
- const { socket, setSocket } = useContext(socketContext);
+  const [account, setAccount] = useState(null);
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
+  const { socket, setSocket } = useContext(socketContext);
+  // Step 1: Create socket only once
+  useEffect(() => {
+    if (!socket) {
+      const sock = io("http://localhost:5000");
+      setSocket(sock);
+    }
+  }, []);
+
+  // Step 2: Wait for socket to exist, then register account
+  useEffect(() => {
+    if (!socket) return; // wait until socket is set
+
+    const doConnect = async () => {
+      const acc = await connect(); // connect wallet
+      if (!acc) return;
+      setAccount(acc);
+      console.log("Socket is ready:", socket);
+      console.log("Account:", acc);
+      socket.emit("register", acc); // register with server
+    };
+
+    doConnect();
+    // Handle new requests
+    const handleNewRequest = (data) => {
+      console.log("New buy request received:", data);
+      setRequestData(data);
+      setShowModal(true);
+    };
+
+    const handleAcceptRequest = (data) => {
+      console.log("Your buy request was accepted:", data);
+      handlePayment(
+        data.price,
+        data.farmer,
+        data.tokenId,
+        data.amountToken,
+        data.buyer
+      );
+      // Further logic like notifying user can be added here
+    };
+
+    socket.on("new_request", handleNewRequest);
+
+    socket.on("accept_request", handleAcceptRequest);
+
+    socket.on("payment_success", (data) => {
+      console.log("Payment successful for token:", data.tokenId);
+      alert("Payment successful! Token transfer will be initiated.");
+    });
+    // optional cleanup if component unmounts
+    return () => {
+      socket.disconnect();
+    };
+  }, [socket]); // runs again when socket is set
   const handleShareLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -47,6 +100,8 @@ export default function Actions({ batchId, product }) {
     }, 2500);
   };
 
+    
+
   const handleReportFraud = () => {
     const confirmed = window.confirm(
       `⚠️ Report Fraud Alert\n\nYou are about to report:\n📦 Product: ${
@@ -78,14 +133,22 @@ export default function Actions({ batchId, product }) {
       }, 2000);
     }
   };
-
+const handleRequest = () => {
+    socket.emit("buy_request", {
+      buyer: account,
+      farmer: "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
+      tokenId: 1,
+      amountToken: 1,
+    });
+    console.log("Buy request sent");
+  };
   return (
     <div className="p-6 space-y-6">
       {/* Primary Action Buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Buy Button (replaces Show QR Code) */}
         <button
-          onClick={() => alert(`🛒 Buying ${product?.name || "Product"}...`)}
+          onClick={() => setShowBuyModal(true)}
           className="flex items-center justify-center px-5 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
         >
           Buy Now
@@ -139,11 +202,68 @@ export default function Actions({ batchId, product }) {
             ? "Reporting..."
             : "Report Fraud"}
         </button>
-        <button
-          onClick={() => setShowQR(!showQR)}
-          className="flex items-center justify-center px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
-        >Buy Product</button>
       </div>
+      {showBuyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] max-w-md relative">
+            {/* Close button */}
+            <button
+              onClick={() => setShowBuyModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-xl font-bold mb-4">Buy Product</h2>
+
+            <div className="space-y-2 text-sm text-gray-700">
+              <p>
+                <strong>Name:</strong> {product?.name}
+              </p>
+              <p>
+                <strong>Batch ID:</strong> {batchId}
+              </p>
+              <p>
+                <strong>Farm:</strong> {product?.farm}
+              </p>
+              <p>
+                <strong>Grade:</strong> {product?.info?.grade}
+              </p>
+              <p>
+                <strong>Certification:</strong> {product?.certification?.title}
+              </p>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1">Quantity</label>
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+            </div>
+
+            <button
+              onClick={() => {
+                if (!account) {
+                  alert("Please connect your wallet first.");
+                  return;
+                }
+                handleRequest()
+                setShowBuyModal(false);
+                alert(
+                  `🛒 Request sent to farmer for ${quantity} units of ${product?.name}`
+                );
+              }}
+              className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg"
+            >
+              Send Request
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Report Success Message */}
       {reportStatus === "reported" && (
