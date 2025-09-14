@@ -136,7 +136,7 @@ async function getUserTokens() {
     console.log("Please install MetaMask");
   }
 }
-export async function deleteFromMemory(value,tokenId) {
+export async function deleteFromMemory(value, tokenId) {
   if (typeof window.ethereum != undefined) {
     walletClient = createWalletClient({
       transport: custom(window.ethereum),
@@ -146,25 +146,25 @@ export async function deleteFromMemory(value,tokenId) {
       transport: custom(window.ethereum),
     });
     const currentChain = await getCurrentChain(walletClient);
-    console.log(connectedAccount,tokenId);
-const balance = await publicClient.readContract({
-  address: contractAddress,
-        abi,
-  functionName: "balanceOf",
-  args: ["0xa0Ee7A142d267C1f36714E4a8F75612F20a79720", 1], // from, tokenId
-});
+    console.log(connectedAccount, tokenId);
+    const balance = await publicClient.readContract({
+      address: contractAddress,
+      abi,
+      functionName: "balanceOf",
+      args: ["0xa0Ee7A142d267C1f36714E4a8F75612F20a79720", 1], // from, tokenId
+    });
 
-console.log("Balance:", balance.toString());
+    console.log("Balance:", balance.toString());
     try {
-       const { request }= await publicClient.simulateContract({
+      const { request } = await publicClient.simulateContract({
         address: contractAddress,
         abi,
         functionName: "deleteToken",
-        args: [connectedAccount, value, tokenId ],
+        args: [connectedAccount, value, tokenId],
         account: connectedAccount,
         chain: currentChain,
       });
-        const hash = await walletClient.writeContract(request);
+      const hash = await walletClient.writeContract(request);
       console.log({ hash });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       console.log("Receipt:", receipt);
@@ -172,11 +172,10 @@ console.log("Balance:", balance.toString());
         console.error("Transaction failed!");
       } else {
         console.log("Transaction succeeded!");
-        if(txHistory[tokenId]){
+        if (txHistory[tokenId]) {
           delete txHistory[tokenId];
         }
       }
-
     } catch (err) {
       console.log("Failed to fetch user tokens: ", err);
       return [];
@@ -201,18 +200,17 @@ function saveTxInMemory(tokenId, txData) {
 // Function to fetch transaction history for a given tokenId
 function getTxnHistory(historyId) {
   let tokenId = historyId.toString(); // ensure string
-    if (!txHistory[tokenId] || txHistory[tokenId].length === 0) {
+  if (!txHistory[tokenId] || txHistory[tokenId].length === 0) {
     console.log(`No transactions found for tokenId ${tokenId}`);
     return [];
   }
 
-   return [...txHistory[tokenId]]
+  return [...txHistory[tokenId]]
     .sort((a, b) => b.timestamp - a.timestamp)
-    .map(tx => ({
+    .map((tx) => ({
       ...tx,
-      time: new Date(tx.timestamp * 1000).toLocaleString() // readable
+      time: new Date(tx.timestamp * 1000).toLocaleString(), // readable
     }));
-
 }
 
 async function transferTokens(tokenId, toAddress, transferAmt) {
@@ -280,16 +278,21 @@ async function transferTokens(tokenId, toAddress, transferAmt) {
   }
 }
 
-async function getTokenMetadata(id) {
+export  async function getTokenMetadata(id) {
+  console.log("Fetching metadata for token ID:", id);
   if (id === undefined || id === null) return null;
+  publicClient = createPublicClient({
+      transport: custom(window.ethereum),
+    });
   let tokenUri = await publicClient.readContract({
     address: contractAddress,
-    abi: abi,
+    abi,
     functionName: "uri",
     args: [BigInt(id)],
   });
 
   if (!tokenUri) return null;
+
   // console.log("TokenUri:",tokenUri,"id:",id)
   // Convert ipfs:// URL to gateway URL
   if (tokenUri.startsWith("ipfs://")) {
@@ -307,6 +310,8 @@ async function getTokenMetadata(id) {
     return null;
   }
 }
+
+
 
 async function getCurrentChain(client) {
   const chainId = await client.getChainId();

@@ -1,31 +1,81 @@
 import React, { useState, useEffect } from "react";
 import { getProductData } from "../lib/data";
+import { useParams } from "react-router-dom";
+import { getTokenMetadata } from "../../blockchain/product_registry.js";
 
-export default function ProductDetails({ batchId = "LOT12345", isLoading = false }) {
+export default function ProductDetails({
+  batchId = "LOT12345",
+  isLoading = false,
+}) {
   const [image, setImage] = useState(null);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isImageLoading, setIsImageLoading] = useState(true);
 
+  const { tokenId } = useParams(); // /product/:tokenId
+  const [metadata, setMetadata] = useState(null);
+  const [isMetaLoading, setIsMetaLoading] = useState(true); // 👈 new
+
+  // Load local product data
   useEffect(() => {
-  const loadProductData = async () => {
-    setIsDataLoading(true);
-    const productData = getProductData(batchId);
+    const loadProductData = async () => {
+      const productData = getProductData(batchId);
 
-    // explicitly pick the 2nd image in gallery if it exists
-    const productImage =
-      productData.gallery?.[1] || productData.image || productData.gallery?.[0] || null;
+      const productImage =
+        productData.gallery?.[1] ||
+        productData.image ||
+        productData.gallery?.[0] ||
+        null;
 
-    setImage(productImage);
-    setIsImageLoading(true);
-    setIsDataLoading(false);
-  };
+      setImage(productImage);
+      setIsImageLoading(true);
+      setIsDataLoading(false);
+    };
 
-  loadProductData();
-}, [batchId]);
+    loadProductData();
+  }, [batchId]);
 
+  // Load blockchain metadata
+  useEffect(() => {
+    const loadMetadata = async () => {
+      try {
+        setIsMetaLoading(true); // 👈 start loading
+        const metaData = await getTokenMetadata(tokenId);
+        console.log("Fetched metadata:", metaData);
+           // Resolve ipfs:// to https://
+      let metaImage = null;
+      if (metaData?.image) {
+        if (metaData.image.startsWith("ipfs://")) {
+          metaImage = `https://ipfs.io/ipfs/${metaData.image.replace("ipfs://", "")}`;
+        } else {
+          metaImage = metaData.image;
+        }
+      }
 
-  if (isDataLoading || isLoading) {
-    return <div className="p-8 text-center text-gray-500">Loading product...</div>;
+      // If blockchain metadata has image, override productData image
+      if (metaImage) {
+        setImage(metaImage);
+        setIsImageLoading(true);
+      }
+        setMetadata(metaData);
+      } catch (err) {
+        console.error("Error loading metadata:", err);
+      } finally {
+        setIsMetaLoading(false); // 👈 stop loading
+      }
+    };
+
+    if (tokenId) {
+      loadMetadata();
+    }
+  }, [tokenId]);
+
+  if (isDataLoading || isLoading || isMetaLoading) {
+    return (
+      <div className="p-8 text-center text-gray-500 flex flex-col items-center">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <span>Loading product...</span>
+      </div>
+    );
   }
 
   const productData = getProductData(batchId);
@@ -82,7 +132,9 @@ export default function ProductDetails({ batchId = "LOT12345", isLoading = false
         {/* Product Info */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="bg-blue-50 px-4 py-3 border-b">
-            <h3 className="text-sm font-bold text-blue-800">Product Information</h3>
+            <h3 className="text-sm font-bold text-blue-800">
+              Product Information
+            </h3>
           </div>
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -92,17 +144,21 @@ export default function ProductDetails({ batchId = "LOT12345", isLoading = false
               </div>
               <div>
                 <label className="text-xs text-gray-500 uppercase">Farm ID</label>
-                <p className="font-mono text-sm">{info.farmId}</p>
+                <p className="font-mono text-sm">{metadata.farmId}</p>
               </div>
               <div>
-                <label className="text-xs text-gray-500 uppercase">Grade</label>
+                <label className="text-xs text-gray-500 uppercase mr-2">
+                  Grade
+                </label>
                 <span className="inline-block px-3 py-1 rounded-full text-xs bg-blue-600 text-white">
                   {info.grade}
                 </span>
               </div>
               <div>
-                <label className="text-xs text-gray-500 uppercase">Quantity</label>
-                <p className="font-bold">{info.quantity}</p>
+                <label className="text-xs text-gray-500 uppercase">
+                  Quantity
+                </label>
+                <p className="font-bold">{metadata.quantity}</p>
               </div>
             </div>
             <div>
@@ -136,6 +192,20 @@ export default function ProductDetails({ batchId = "LOT12345", isLoading = false
             <p className="text-gray-700">{certification.details}</p>
           </div>
         </div>
+
+        {/* Example showing blockchain metadata */}
+        {metadata && (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-purple-50 px-4 py-3 border-b">
+              <h3 className="text-sm font-bold text-purple-800">Blockchain Metadata</h3>
+            </div>
+            <div className="p-6">
+              <pre className="text-xs bg-gray-100 p-2 rounded">
+                {JSON.stringify(metadata, null, 2)}
+              </pre>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

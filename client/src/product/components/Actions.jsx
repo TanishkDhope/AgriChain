@@ -60,7 +60,7 @@ export default function Actions({ batchId, product }) {
 
     socket.on("payment_success", (data) => {
       console.log("Payment successful for token:", data.tokenId);
-      alert("Payment successful! Token transfer will be initiated.");
+      toast.success("Payment successful! Token transfer will be initiated.");
     });
     // optional cleanup if component unmounts
     return () => {
@@ -267,14 +267,14 @@ export default function Actions({ batchId, product }) {
         {/* Buy Button (replaces Show QR Code) */}
         <button
           onClick={() => setShowBuyModal(true)}
-          className="flex items-center justify-center px-5 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
+          className="flex cursor-pointer not-first:items-center justify-center px-5 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
         >
           Buy Now
         </button>
 
         <button
           onClick={handleShareLink}
-          className={`flex items-center justify-center px-5 py-3 font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg ${
+          className={`flex cursor-pointer items-center justify-center px-5 py-3 font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg ${
             copied
               ? "bg-green-600 text-white"
               : "bg-gray-100 hover:bg-gray-200 text-gray-700 border-2 border-gray-300"
@@ -294,7 +294,7 @@ export default function Actions({ batchId, product }) {
         <button
           onClick={handleRescanVerify}
           disabled={isVerifying}
-          className="flex items-center justify-center px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
+          className="flex cursor-pointer items-center justify-center px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg"
         >
           <RefreshCw
             className={`w-5 h-5 mr-2 ${isVerifying ? "animate-spin" : ""}`}
@@ -305,7 +305,7 @@ export default function Actions({ batchId, product }) {
         <button
           onClick={handleReportFraud}
           disabled={reportStatus === "reporting"}
-          className={`flex items-center justify-center px-5 py-3 font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg ${
+          className={`flex cursor-pointer items-center justify-center px-5 py-3 font-semibold rounded-xl transition-all duration-200 text-sm shadow-md hover:shadow-lg ${
             reportStatus === "reported"
               ? "bg-red-800 text-white"
               : reportStatus === "reporting"
@@ -327,7 +327,7 @@ export default function Actions({ batchId, product }) {
             {/* Close button */}
             <button
               onClick={() => setShowBuyModal(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+              className="cursor-pointer absolute top-3 right-3 text-gray-500 hover:text-gray-700"
             >
               ✕
             </button>
@@ -366,13 +366,13 @@ export default function Actions({ batchId, product }) {
             <button
               onClick={() => {
                 if (!account) {
-                  alert("Please connect your wallet first.");
+                  toast.error("Please connect your wallet first.");
                   return;
                 }
                 handleRequest();
                 setShowBuyModal(false);
               }}
-              className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg"
+              className="mt-6 cursor-pointer  w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg"
             >
               Send Request
             </button>

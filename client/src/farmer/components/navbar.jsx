@@ -114,7 +114,7 @@ export default function Navbar({ onNavigate, activeSection, onLogout, showProfil
                   <button
                     key={item.id}
                     onClick={() => go(item.id)}
-                    className={`flex items-center space-x-2 px-3 xl:px-4 py-2 rounded-lg transition-all duration-200 ${
+                    className={`cursor-pointer flex items-center space-x-2 px-3 xl:px-4 py-2 rounded-lg transition-all duration-200 ${
                       isActive
                         ? "bg-white text-green-700 shadow-md font-semibold"
                         : "text-white hover:text-green-100 hover:bg-white/20"

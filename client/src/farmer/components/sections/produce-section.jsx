@@ -1,5 +1,9 @@
 import { useMemo, useState, useEffect } from "react";
 import { Button } from "../../../components/ui/button";
+import { Link } from "react-router-dom"
+import { toast } from "react-toastify";
+
+
 import {
   Card,
   CardContent,
@@ -97,7 +101,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
         !form.basePrice ||
         !form.locality
       ) {
-        alert("Please fill in all required fields.");
+        toast.error("Please fill in all required fields.");
         return;
       }
 
@@ -170,11 +174,11 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
       if (editing) onUpdate(newProduceItem);
       else onAdd(newProduceItem);
 
-      alert(`Success! Metadata uploaded & ${mintAmount} tokens minted!`);
+      toast.success(`Metadata uploaded & ${mintAmount} tokens minted!`);
       setOpen(false);
     } catch (error) {
       console.error("Upload and mint error:", error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Upload failed: ${error.message}`);
     } finally {
       setIsUploading(false);
     }
@@ -199,11 +203,11 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
     try {
       await deleteFromMemory(quantity, tokenId);
       onDelete(tokenId);
-      alert(`Token ${tokenId} deleted successfully.`);
+      toast.success(`Token ${tokenId} deleted successfully.`);
       handleGetTokens();
     } catch (error) {
       console.error("Delete token error:", error);
-      alert(`Error deleting token: ${error.message}`);
+      toast.error(`Delete failed: ${error.message}`);
     }
   };
 
@@ -230,7 +234,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
         </div>
         <Button
           onClick={startAdd}
-          className="bg-emerald-600 hover:bg-emerald-700"
+          className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
         >
           Add Produce
         </Button>
@@ -258,7 +262,7 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
         <TabsContent value="cards" className="mt-6">
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {tokens?.map((t, idx) => (
-              <Card key={idx} className="rounded-2xl shadow-md">
+              <Card key={idx}    className="rounded-2xl shadow-md">
                 <CardHeader>
                   <CardTitle className="flex justify-between">
                     <span>{t.name}</span>
@@ -278,17 +282,18 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
                   <p className="text-gray-600">{t.description}</p>
                 </CardContent>
                 <CardFooter className="flex justify-between">
-                  <Button size="sm" variant="outline" onClick={() => startEdit(t)}>
+                  <Button className="cursor-pointer" size="sm" variant="outline" onClick={() => startEdit(t)}>
                     Edit
                   </Button>
                   <Button
                     size="sm"
-                    className="bg-emerald-600 text-white"
+                    className=" cursor-pointer bg-emerald-600 text-white"
                     onClick={() => handleShowQR(t)}
                   >
                     Show QR
                   </Button>
                   <Button
+                  className="cursor-pointer"
                     size="sm"
                     variant="destructive"
                     onClick={() => handleDeleteToken(t.id, t.balance)}
@@ -460,12 +465,12 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
               />
             </LabeledInput>
           </div>
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="cursor-pointer mt-4 flex justify-end gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-emerald-600 text-white"
+              className="bg-emerald-600 text-white cursor-pointer"
               onClick={submit}
               disabled={isUploading}
             >

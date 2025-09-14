@@ -66,7 +66,7 @@ const [price, setPrice] = React.useState("");
 
     socket.on("payment_success", (data) => {
       console.log("Payment successful for token:", data.tokenId);
-      alert("Payment successful! Token transfer will be initiated.");
+      toast.success("Payment successful! Token transfer will be initiated.");
     });
     // optional cleanup if component unmounts
     return () => {
@@ -94,10 +94,10 @@ const [price, setPrice] = React.useState("");
 
         <div ref={ctaRef} className="mt-6 flex items-center gap-3">
           <a href="#produce">
-            <Button   className="bg-emerald-600 hover:bg-emerald-700">Add Produce</Button>
+            <Button   className="cursor-pointer bg-emerald-600 hover:bg-emerald-700">Add Produce</Button>
           </a>
           <a href="#market">
-            <Button variant="outline">View Market</Button>
+            <Button className="cursor-pointer " variant="outline">View Request  </Button>
           </a>
         </div>
 
@@ -128,7 +128,7 @@ const [price, setPrice] = React.useState("");
       {/* Close button */}
       <button
         onClick={() => setShowRequestModal(false)}
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+        className="cursor-pointer absolute top-3 right-3 text-gray-500 hover:text-gray-700"
       >
         ✕
       </button>
@@ -159,7 +159,7 @@ const [price, setPrice] = React.useState("");
       <button
         onClick={() => {
           if (!price || price <= 0) {
-            alert("Please enter a valid price before accepting.");
+            toast.error("Please enter a valid price before accepting.");
             return;
           }
           socket.emit("accept_request", {
@@ -169,7 +169,7 @@ const [price, setPrice] = React.useState("");
           });
           setShowRequestModal(false);
         }}
-        className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg"
+        className="mt-6 w-full cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-lg"
       >
         Accept Request
       </button>

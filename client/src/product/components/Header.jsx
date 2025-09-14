@@ -45,16 +45,14 @@ export default function Header({
               {showBackButton && (
                 <button
                   onClick={handleBackNavigation}
-                  className="p-3 bg-white/15 rounded-xl hover:bg-white/25 transition-all duration-200 hover:scale-105"
+                  className="p-3  cursor-pointer  rounded-xl hover:bg-white/25 transition-all duration-200 hover:scale-125"
                   title="Go back"
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-7 w-7" />
                 </button>
               )}
 
-              <div className="p-3 bg-white/15 rounded-xl">
-                <Leaf className="h-8 w-8" />
-              </div>
+
 
               <div className="space-y-1">
                 <h1 className="text-2xl font-bold tracking-tight">{title}</h1>

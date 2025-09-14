@@ -4,6 +4,8 @@ import "./index.css";
 import App from "./App.jsx";
 import {SocketProvider } from "./contexts/socketContext.jsx";
 
+
+
 createRoot(document.getElementById("root")).render(
   <SocketProvider>
     <App />
