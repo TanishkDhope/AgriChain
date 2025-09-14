@@ -303,7 +303,9 @@ export default function ProduceSection({ produce, onAdd, onUpdate, onDelete }) {
             <img src={t.image} alt={t.name} />
             <h3>{t.name}</h3>
             <p>ID: {t.id.toString()}</p>
-            <p>Balance: {t.balance}</p>
+            <p>Quantity: {t.balance}</p>
+            <p>Locality: {t.metadata.locality}</p>
+            <p>Type: {t.metadata.type}</p>
             <p>{t.description}</p>
           </div>
         ))}

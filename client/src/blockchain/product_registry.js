@@ -119,6 +119,7 @@ async function getUserTokens() {
         result.push({
           id: tokenId,
           balance,
+          metadata,
           name: metadata.name || "Unnamed Token",
           description: metadata.description || "",
           image: imageUrl,
