@@ -23,7 +23,7 @@ function App() {
 
         {/* Product Routes */}
         <Route
-          path="/product/:batchId/:productName"
+          path="/product/:batchId"
           element={<ProductPage />}
         />
         <Route path="/product" element={<ProductPage />} />
