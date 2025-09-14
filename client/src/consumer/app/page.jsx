@@ -23,18 +23,20 @@ export default function ConsumerHomePage() {
     setTimeout(() => setNotification(""), 3000);
   };
 
-  const handleScan = (method) => {
+  // ✅ Updated to handle real QR scan result
+  const handleScan = (decodedText) => {
     setShowScanModal(false);
     setIsScanning(true);
 
+    // Simulate small delay (optional, just for UX)
     setTimeout(() => {
       const newScan = {
         id: Date.now(),
-        productName: `Product ${Math.floor(Math.random() * 1000)}`,
-        origin: "Farm Valley Co.",
+        productName: decodedText || `Unknown Product`,
+        origin: "Farm Valley Co.", // you can replace with real lookup later
         date: new Date().toLocaleDateString(),
         status: Math.random() > 0.3 ? "Verified" : "Warning",
-        qrCode: `QR${Date.now()}`,
+        qrCode: decodedText,
       };
 
       const updated = [newScan, ...scanHistory].slice(0, 10);
@@ -42,8 +44,8 @@ export default function ConsumerHomePage() {
       localStorage.setItem("scanHistory", JSON.stringify(updated));
 
       setIsScanning(false);
-      showNotification(`Product scanned: ${newScan.productName}`);
-    }, 2000);
+      showNotification(`Scanned: ${newScan.productName}`);
+    }, 1000);
   };
 
   return (
