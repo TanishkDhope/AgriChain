@@ -30,7 +30,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("buy_request", (data) => {
-    
+    console.log("Buy request received:", data);
   io.to(data.farmer).emit("new_request", data);
 });
 
