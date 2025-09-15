@@ -9,6 +9,7 @@ import Timeline from "../components/Timeline.jsx";
 import Reviews from "../components/Reviews.jsx";
 import Actions from "../components/Actions.jsx";
 import Notification from "../components/Notification.jsx";
+import Chatbot from "./Chatbot";
 import {
   productData,
   timelineData,
@@ -118,7 +119,7 @@ export default function ProductPage({ onLogout }) {
           </div>
         </div>
       </div>
-
+      <Chatbot />
       <Footer />
       <Notification message={notification} />
     </div>

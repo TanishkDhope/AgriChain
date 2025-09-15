@@ -7,6 +7,7 @@ import Contracts from "./components/Contracts";
 import Transactions from "./components/Transactions";
 import QRScanner from "./components/QRScanner";
 import ProfileModal from "./components/ProfileModal";
+import Chatbot from "./Chatbot";
 import Footer from "./components/Footer";
 
 export default function RetailerDashboard() {
@@ -109,7 +110,7 @@ export default function RetailerDashboard() {
           <QRScanner />
         </section>
       </main>
-
+      <Chatbot />
       <Footer />
 
       <ProfileModal
