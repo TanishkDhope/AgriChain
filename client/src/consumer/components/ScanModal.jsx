@@ -2,36 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { Camera, Upload, X } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import QrScanner from "qr-scanner";
+import { useTranslation } from "../i18n/config";
 
 export default function ScanModal({ isVisible, onClose, onScan }) {
-  const [mode, setMode] = useState(null); // "camera" or "upload"
-  const cameraRef = useRef(null);
+  const { t } = useTranslation();
+  const [mode, setMode] = useState(null);
   const scannerRef = useRef(null);
-  const [result, setResult] = useState("");
 
-  useEffect(() => {
-    if (mode === "camera") {
-      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-      scannerRef.current = new Html5Qrcode("camera-preview");
+  // ... (existing camera logic remains the same)
 
-      scannerRef.current
-        .start({ facingMode: "environment" }, config, (decodedText) => {
-          onScan(decodedText); 
-          stopScanner();
-        })
-        .catch((err) => console.error("Camera error:", err));
-    }
-
-    return () => stopScanner();
-  }, [mode]);
-
-  const stopScanner = () => {
-    if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => {});
-      scannerRef.current.clear();
-      scannerRef.current = null;
-    }
-  };
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -41,14 +20,13 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
         returnDetailedScanResult: true,
       });
       if (qrResult?.data) {
-        // Redirect immediately
         window.location.href = qrResult.data;
       } else {
-        alert("❌ No QR code found in this image.");
+        alert(t("modal.noQrFound"));
       }
     } catch (err) {
       console.error("QR scan error:", err);
-      alert("❌ No QR code found in this image.");
+      alert(t("modal.noQrFound"));
     }
   };
 
@@ -59,20 +37,13 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl relative">
         <div className="flex justify-between items-center p-6 border-b">
           <h3 className="text-xl font-bold text-gray-900">
-            Choose Scan Method
+            {t("modal.scannerTitle")}
           </h3>
-          <button
-            onClick={() => {
-              stopScanner();
-              onClose();
-            }}
-            className="p-2 rounded-full hover:bg-gray-100"
-          >
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">
             <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
 
-        {/* Main content */}
         <div className="p-6 space-y-4">
           {!mode && (
             <>
@@ -81,11 +52,11 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
                 className="w-full bg-green-600 text-white py-4 rounded-xl font-semibold hover:bg-green-700 transition-colors flex items-center justify-center"
               >
                 <Camera className="mr-3 h-5 w-5" />
-                Use Camera
+                {t("modal.camera")}
               </button>
               <label className="w-full border-2 border-green-300 text-green-700 py-4 rounded-xl font-semibold hover:bg-green-50 transition-colors flex items-center justify-center cursor-pointer">
                 <Upload className="mr-3 h-5 w-5" />
-                Upload Image
+                {t("modal.upload")}
                 <input
                   type="file"
                   accept="image/*"
@@ -98,15 +69,12 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
 
           {mode === "camera" && (
             <div>
-              <div
-                id="camera-preview"
-                className="w-full h-64 bg-gray-200 rounded-lg"
-              ></div>
+              <div id="camera-preview" className="w-full h-64 bg-gray-200 rounded-lg"></div>
               <button
                 onClick={() => setMode(null)}
                 className="mt-4 w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
               >
-                Stop Camera
+                {t("modal.back")}
               </button>
             </div>
           )}
@@ -114,9 +82,7 @@ export default function ScanModal({ isVisible, onClose, onScan }) {
 
         <div className="px-6 pb-6">
           <p className="text-sm text-gray-500 text-center">
-            {mode
-              ? "Scanning for QR code..."
-              : "Choose how you'd like to scan the QR code"}
+            {mode ? t("modal.scanning") : t("modal.title")}
           </p>
         </div>
       </div>

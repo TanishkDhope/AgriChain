@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { X, Flag, Send, Upload } from "lucide-react";
+import { useTranslation } from "../i18n/config";
 
 export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     issueType: "",
     productId: "",
@@ -36,7 +38,7 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files;
+    const file = e.target.files[0]; // 🔧 BUG FIX: Use [0] to get the first file
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -79,7 +81,7 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
         <div className="flex items-center justify-between p-4 md:p-6 border-b">
           <div className="flex items-center gap-2 md:gap-3">
             <Flag className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
-            <h2 className="text-base md:text-lg font-semibold text-gray-900">Report Issue</h2>
+            <h2 className="text-base md:text-lg font-semibold text-gray-900">{t("report.title")}</h2>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
             <X className="h-4 w-4 md:h-5 md:w-5 text-gray-500" />
@@ -92,7 +94,7 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
           {/* Issue Type (Optional) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Issue Type <span className="text-gray-400 text-xs">(Optional)</span>
+              {t("report.type")} <span className="text-gray-400 text-xs">({t("common.optional")})</span>
             </label>
             <select
               name="issueType"
@@ -100,29 +102,30 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
               onChange={handleInputChange}
               className="w-full p-2.5 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm md:text-base"
             >
-              <option value="">Select issue type</option>
-              <option value="quality">Product Quality Issue</option>
-              <option value="authenticity">Authenticity Concern</option>
-              <option value="supply-chain">Supply Chain Problem</option>
-              <option value="labeling">Incorrect Labeling</option>
-              <option value="contamination">Contamination</option>
-              <option value="payment">Payment Issue</option>
-              <option value="fraud">Suspected Fraud</option>
-              <option value="other">Other</option>
+              <option value="">{t("report.selectType")}</option>
+              <option value="quality">{t("report.qualityIssues")}</option>
+              <option value="authenticity">{t("report.authenticityIssues")}</option>
+              <option value="supply-chain">{t("report.supplyChainIssues")}</option>
+              <option value="labeling">{t("report.labelingIssues")}</option>
+              <option value="contamination">{t("report.contaminationIssues")}</option>
+              <option value="payment">{t("report.paymentIssues")}</option>
+              <option value="fraud">{t("report.fraudIssues")}</option>
+              <option value="packaging">{t("report.packagingIssues")}</option>
+              <option value="other">{t("report.otherIssues")}</option>
             </select>
           </div>
 
           {/* Product ID (Optional) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product ID <span className="text-gray-400 text-xs">(Optional)</span>
+              {t("report.productId")}
             </label>
             <input
               type="text"
               name="productId"
               value={formData.productId}
               onChange={handleInputChange}
-              placeholder="Enter product ID or scan code"
+              placeholder={t("report.productIdPlaceholder")}
               className="w-full p-2.5 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm md:text-base"
             />
           </div>
@@ -130,7 +133,7 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
           {/* Upload Image (Optional) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Image <span className="text-gray-400 text-xs">(Optional)</span>
+              {t("report.uploadImage")}
             </label>
             
             {!formData.image ? (
@@ -148,7 +151,7 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
                   className="w-full p-3 md:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-400 hover:bg-red-50 transition-colors flex flex-col items-center gap-2 text-sm md:text-base"
                 >
                   <Upload className="h-6 w-6 md:h-8 md:w-8 text-gray-400" />
-                  <span className="text-gray-600">Click to upload image</span>
+                  <span className="text-gray-600">{t("report.uploadText")}</span>
                   <span className="text-xs text-gray-400">PNG, JPG, GIF up to 10MB</span>
                 </button>
               </div>
@@ -178,7 +181,7 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
           {/* Description (Required) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
+              {t("report.description")} *
             </label>
             <textarea
               name="description"
@@ -186,7 +189,7 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
               onChange={handleInputChange}
               required
               rows={4}
-              placeholder="Please describe the issue in detail..."
+              placeholder={t("report.descriptionPlaceholder")}
               className="w-full p-2.5 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm md:text-base"
             />
           </div>
@@ -198,14 +201,14 @@ export default function ReportIssuePopup({ isOpen, onClose, onSubmit }) {
               onClick={onClose}
               className="flex-1 py-2.5 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm md:text-base"
             >
-              Cancel
+              {t("report.cancel")}
             </button>
             <button
               type="submit"
               className="flex-1 py-2.5 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center justify-center gap-2 transition-colors text-sm md:text-base"
             >
               <Send className="h-4 w-4" />
-              Submit Report
+              {t("report.submit")}
             </button>
           </div>
         </form>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { LanguageProvider } from "../i18n/config";
 import Header from "../components/Header";
 import MainContent from "../components/MainContent";
 import ScanModal from "../components/ScanModal";
@@ -7,7 +8,7 @@ import Notification from "../components/Notification";
 import Footer from "../components/Footer";
 import Chatbot from "./Chatbot";
 
-export default function ConsumerHomePage() {
+function ConsumerHomePageContent() {
   const [showScanModal, setShowScanModal] = useState(false);
   const [scanHistory, setScanHistory] = useState([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -23,18 +24,16 @@ export default function ConsumerHomePage() {
     setTimeout(() => setNotification(""), 3000);
   };
 
-  // ✅ Updated to handle real QR scan result
   const handleScan = (decodedText) => {
-    window.location.href = decodedText; // Redirect immediately
+    window.location.href = decodedText;
     setShowScanModal(false);
     setIsScanning(true);
 
-    // Simulate small delay (optional, just for UX)
     setTimeout(() => {
       const newScan = {
         id: Date.now(),
         productName: decodedText || `Unknown Product`,
-        origin: "Farm Valley Co.", // you can replace with real lookup later
+        origin: "Farm Valley Co.",
         date: new Date().toLocaleDateString(),
         status: Math.random() > 0.3 ? "Verified" : "Warning",
         qrCode: decodedText,
@@ -43,7 +42,6 @@ export default function ConsumerHomePage() {
       const updated = [newScan, ...scanHistory].slice(0, 10);
       setScanHistory(updated);
       localStorage.setItem("scanHistory", JSON.stringify(updated));
-
       setIsScanning(false);
       showNotification(`Scanned: ${newScan.productName}`);
     }, 1000);
@@ -51,24 +49,31 @@ export default function ConsumerHomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-      <Notification message={notification} />
-      <LoadingOverlay isVisible={isScanning} />
-
       <Header scanCount={scanHistory.length} />
-
-      <MainContent
-        scanHistory={scanHistory}
-        onScanClick={() => setShowScanModal(true)}
-        onNotification={showNotification}
-      />
-
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <MainContent
+          scanHistory={scanHistory}
+          onScanClick={() => setShowScanModal(true)}
+          onNotification={showNotification}
+        />
+      </main>
+      <Footer />
       <ScanModal
         isVisible={showScanModal}
         onClose={() => setShowScanModal(false)}
         onScan={handleScan}
       />
+      <LoadingOverlay isVisible={isScanning} />
+      <Notification message={notification} />
       <Chatbot />
-      <Footer />
     </div>
+  );
+}
+
+export default function ConsumerHomePage() {
+  return (
+    <LanguageProvider>
+      <ConsumerHomePageContent />
+    </LanguageProvider>
   );
 }
