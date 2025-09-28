@@ -8,6 +8,7 @@ import ProductPage from "./product/app/page.jsx";
 import RoleSelection from "./auth/components/RoleSelection.jsx";
 import ConsumerHomePage from "./consumer/app/page.jsx";
 import RetailerPage from "./retailer/app/page.jsx";
+import CropDetector from "./cnn/page.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/track/:batchId" element={<ProductPage />} />
 
           <Route path="/rs" element={<RoleSelection />} />
+          <Route path="/cnn" element={<CropDetector />} />
         </Routes>
       </Router>
       <ToastContainer position="top-right" autoClose={3000} />
