@@ -1,6 +1,6 @@
 # AgriChain
 
-TL;DR: AgriChain is an end-to-end system for tracking agricultural produce using blockchain (ERC-1155 tokens) and QR codes so that farmers receive fair prices and consumers receive verified produce. Each physical batch is represented by ERC-1155 tokens; when a batch is split the tokens are split, allowing each resulting batch to be tracked individually. The project also includes a personalized agentic bot that helps farmers get fair price information and local market insights.
+AgriChain is an end-to-end system for tracking agricultural produce using blockchain (ERC-1155 tokens) and QR codes so that farmers receive fair prices and consumers receive verified produce. Each physical batch is represented by ERC-1155 tokens; when a batch is split the tokens are split, allowing each resulting batch to be tracked individually. The project also includes a personalized agentic bot that helps farmers get fair price information and local market insights.
 
 **Key Goals**
 
@@ -75,7 +75,6 @@ Quick start
 
 Notes & environment keys
 
-- The repo includes `server/keys/` and `server/data/`. Keep any private keys or service account JSON files out of public repositories; use environment variables or a secrets manager instead.
 - The server uses environment variables (`dotenv`) for API keys and credentials. Check `server/.env` (not in repo) or add one with keys for Dialogflow, Google APIs, and Razorpay.
 
 Important files to inspect
@@ -95,15 +94,4 @@ Contributing
 
 - Please open issues or PRs for bugs/features. Keep changes small and focused. If you modify contracts, add or update tests in `smart_contracts/test/`.
 
-License
 
-- Add a license file (e.g., `LICENSE`) as appropriate for your project. None is included by default.
-
-Contact / Next steps
-
-- If you want, I can:
-  - Run the frontend and backend locally and verify basic endpoints.
-  - Build and run contract tests with Foundry.
-  - Add a CI workflow to run tests/builds automatically.
-
--- AgriChain README (auto-generated)
